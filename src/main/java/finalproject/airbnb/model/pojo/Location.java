@@ -1,5 +1,6 @@
 package finalproject.airbnb.model.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Location {
 
+    @JsonIgnore
     private long id;
     private String address;
     private String city;

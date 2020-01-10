@@ -2,13 +2,12 @@ package finalproject.airbnb.controller;
 
 
 import finalproject.airbnb.model.dao.StayDAO;
+import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.StayDTO;
 import finalproject.airbnb.model.pojo.Stay;
 import finalproject.airbnb.model.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
@@ -27,6 +26,23 @@ public class StayController {
         stay.setHost(user);
         stayDAO.addStay(stay);
         return stay;
+    }
+
+    @GetMapping("/stays/{id}")
+    public GetStayDTO getStay(@PathVariable long id) throws SQLException {
+        GetStayDTO getStayDTO = stayDAO.getStayById(id);
+        if(getStayDTO == null) {
+            //no stay
+        }
+        return getStayDTO;
+    }
+
+    @DeleteMapping("/stays/{id}")
+    public String deleteStay(@PathVariable long id) throws SQLException {
+        if(stayDAO.getStayById(id) == null) {
+            //no stay
+        }
+        return stayDAO.deleteStay(id);
     }
 
 }
