@@ -1,6 +1,5 @@
 package finalproject.airbnb.controller;
 
-import finalproject.airbnb.exceptions.UserDataException;
 import finalproject.airbnb.model.dto.LoginUserDTO;
 import finalproject.airbnb.model.dto.RegisterUserDTO;
 import finalproject.airbnb.model.dto.UserWithoutPassDTO;
