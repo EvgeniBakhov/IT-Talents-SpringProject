@@ -1,7 +1,5 @@
 package finalproject.airbnb.model.dao;
 
-
-import finalproject.airbnb.managers.DBManager;
 import finalproject.airbnb.model.pojo.Location;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,7 +16,10 @@ public class LocDAO {
     public long addLocation(Location location) throws SQLException {
         Connection connection = jdbcTemplate.getDataSource().getConnection();
         String sql = "INSERT INTO locations (street_address, city, country_id) VALUES(?,?,?);";
-        long countryID = addCountry(location.getCountry());
+        long countryID = getCountryId(location.getCountry());
+        if(countryID == -1) {
+            countryID = addCountry(location.getCountry());
+        }
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS )) {
             statement.setString(1, location.getAddress());
             statement.setString(2, location.getCity());
@@ -37,11 +38,10 @@ public class LocDAO {
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, country);
             ResultSet result = statement.executeQuery();
-//            if (result == null) {
-//                return addCountry(country);
-//            }
-            result.next();
-            return result.getLong(1);
+            if(result.next()) {
+                return result.getLong(1);
+            }
+            return -1;
         }
     }
 
