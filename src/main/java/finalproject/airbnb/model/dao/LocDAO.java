@@ -1,7 +1,5 @@
 package finalproject.airbnb.model.dao;
 
-
-import finalproject.airbnb.managers.DBManager;
 import finalproject.airbnb.model.pojo.Location;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
