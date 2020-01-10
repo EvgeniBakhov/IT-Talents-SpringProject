@@ -7,19 +7,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+
+
+import java.util.Date;
+
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class RegisterUserDTO {
     private String email;
     private String password;
     private String confirmPassword;
     private String firstName;
     private String lastName;
-    //@JsonFormat(pattern = "yyyy-MM-dd")
-    //private LocalDate birthday;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private Date birthday;
     private String phoneNumber;
     private String userDescription;
     private String address;

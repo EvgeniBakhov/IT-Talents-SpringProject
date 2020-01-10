@@ -63,6 +63,7 @@ public class LocDAO {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             result = statement.executeQuery();
+            result.next();
             return new Location(id, result.getString("street_address"), result.getString("city"), result.getString("country"));
         }
   }

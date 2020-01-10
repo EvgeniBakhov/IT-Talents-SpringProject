@@ -1,13 +1,14 @@
 package finalproject.airbnb.model.pojo;
 
 import finalproject.airbnb.model.dto.RegisterUserDTO;
-import finalproject.airbnb.model.pojo.Location;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import sun.nio.cs.ext.MacCentralEurope;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Getter
 @Setter
@@ -33,8 +34,7 @@ public class User {
                 registerUserDTO.getPassword(),
                 registerUserDTO.getFirstName(),
                 registerUserDTO.getLastName(),
-              //  registerUserDTO.getBirthday(),
-                null,
+                registerUserDTO.getBirthday().toInstant().atZone(ZoneId.of("Europe/Sofia")).toLocalDate(),
                 registerUserDTO.getPhoneNumber(),
                 LocalDate.now(),
                 registerUserDTO.getUserDescription(),
