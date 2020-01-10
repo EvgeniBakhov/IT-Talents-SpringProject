@@ -8,6 +8,7 @@ import finalproject.airbnb.model.pojo.User;
 import finalproject.airbnb.model.dao.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import finalproject.airbnb.utilities.UserValidations;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
 
-@Component
 @RestController
 public class UserController {
 
@@ -33,8 +33,7 @@ public class UserController {
         User user = new User(registerUserDTO);
         userDAO.addUser(user);
         session.setAttribute(SESSION_KEY_LOGGED_USER, user);
-        UserWithoutPassDTO registeredUser = new UserWithoutPassDTO(user);
-        return registeredUser;
+        return new UserWithoutPassDTO(user);
     }
 
     @PostMapping("/login")
@@ -56,6 +55,10 @@ public class UserController {
         return loggedUser;
     }
 
+    @GetMapping(value = "/hi")
+    public String sayHi(){
+        return "hi";
+    }
 
 
 }

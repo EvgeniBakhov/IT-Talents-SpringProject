@@ -18,7 +18,8 @@ public class RegisterUserDTO {
     private String confirmPassword;
     private String firstName;
     private String lastName;
-    private LocalDate birthday;
+    //@JsonFormat(pattern = "yyyy-MM-dd")
+    //private LocalDate birthday;
     private String phoneNumber;
     private String userDescription;
     private String address;

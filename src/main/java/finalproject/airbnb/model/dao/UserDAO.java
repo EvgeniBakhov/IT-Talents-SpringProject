@@ -70,19 +70,23 @@ public class UserDAO {
         try (PreparedStatement statement = connection.prepareStatement(sql);) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
-            return new User(
-                    result.getLong("id"),
-                    result.getString("email"),
-                    result.getString("password"),
-                    result.getString("first_name"),
-                    result.getString("last_name"),
-                    result.getDate("birthday").toLocalDate(),
-                    result.getString("phone_number"),
-                    result.getDate("join_date").toLocalDate(),
-                    result.getString("user_description"),
-                    locationDAO.getLocationById(result.getLong("user_location_id")),
-                    result.getString("profile_picture")
-            );
+            if(result.next()) {
+                return new User(
+                        result.getLong("id"),
+                        result.getString("email"),
+                        result.getString("password"),
+                        result.getString("first_name"),
+                        result.getString("last_name"),
+                        result.getDate("birthday").toLocalDate(),
+                        result.getString("phone_number"),
+                        result.getDate("join_date").toLocalDate(),
+                        result.getString("user_description"),
+                        locationDAO.getLocationById(result.getLong("user_location_id")),
+                        result.getString("profile_picture"));
+            }
+            else {
+                return null;
+            }
         }
     }
 
@@ -94,19 +98,23 @@ public class UserDAO {
         try (PreparedStatement statement = connection.prepareStatement(sql);) {
             statement.setString(1, email);
             ResultSet result = statement.executeQuery();
-            return new User(
-                    result.getLong("id"),
-                    result.getString("email"),
-                    result.getString("password"),
-                    result.getString("first_name"),
-                    result.getString("last_name"),
-                    result.getDate("birthday").toLocalDate(),
-                    result.getString("phone_number"),
-                    result.getDate("join_date").toLocalDate(),
-                    result.getString("user_description"),
-                    locationDAO.getLocationById(result.getLong("user_location_id")),
-                    result.getString("profile_picture")
-            );
+            if(result.next()) {
+                return new User(
+                        result.getLong("id"),
+                        result.getString("email"),
+                        result.getString("password"),
+                        result.getString("first_name"),
+                        result.getString("last_name"),
+                        result.getDate("birthday").toLocalDate(),
+                        result.getString("phone_number"),
+                        result.getDate("join_date").toLocalDate(),
+                        result.getString("user_description"),
+                        locationDAO.getLocationById(result.getLong("user_location_id")),
+                        result.getString("profile_picture"));
+            }
+            else {
+                return null;
+            }
         }
     }
 
