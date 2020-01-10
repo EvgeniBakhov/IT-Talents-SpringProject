@@ -1,33 +1,55 @@
 package finalproject.airbnb.controller;
 
+import finalproject.airbnb.exceptions.AuthorizationException;
+import finalproject.airbnb.exceptions.BadRequestException;
+import finalproject.airbnb.exceptions.NotFoundException;
 import finalproject.airbnb.model.dto.LoginUserDTO;
 import finalproject.airbnb.model.dto.RegisterUserDTO;
 import finalproject.airbnb.model.dto.UserWithoutPassDTO;
 import finalproject.airbnb.model.pojo.User;
 import finalproject.airbnb.model.dao.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
-import finalproject.airbnb.utilities.UserValidations;
+import finalproject.airbnb.utilities.UserValidator;
 
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
 
 
 @RestController
-public class UserController {
+public class UserController extends AbstractController{
 
     public static final String SESSION_KEY_LOGGED_USER = "logged_user";
 
     @Autowired
     private UserDAO userDAO;
     @Autowired
-    private UserValidations userValidations;
+    private UserValidator userValidator;
 
     @PostMapping("/register")
     public UserWithoutPassDTO registerUser(@RequestBody RegisterUserDTO registerUserDTO, HttpSession session) throws SQLException {
-        //TODO validations, exception handling
+        if(!registerUserDTO.getPassword().equals(registerUserDTO.getConfirmPassword())){
+            throw new BadRequestException("Passwords don't match.");
+        }
         User user = new User(registerUserDTO);
+        if(!userValidator.isValidName(user.getFirstName()) || !userValidator.isValidName(user.getLastName())){
+            throw new BadRequestException("Your first name and your last name must contain from 2 to 30 symbols.");
+        }
+        if(!userValidator.isValidEmail(user.getEmail())){
+            throw new BadRequestException("Email is not valid.");
+        }
+        if(!userValidator.isValidPassword(user.getPassword())){
+            throw new BadRequestException("Your password must contain at least 8 characters and at least 1 uppercase letter.");
+        }
+        if(!userValidator.isValidBirthday(user.getBirthday())){
+            throw new BadRequestException("You must be at least 18 years old to register.");
+        }
+        if(!userValidator.isValidPhoneNumber(user.getPhoneNumber())){
+            throw new BadRequestException("Your number must contain from 11 to 15 characters and start with '+'");
+        }
+        if(!userValidator.isValidLocation(user.getLocation())){
+            throw new BadRequestException("Invalid address or city or country name.");
+        }
         userDAO.addUser(user);
         session.setAttribute(SESSION_KEY_LOGGED_USER, user);
         UserWithoutPassDTO registeredUser = new UserWithoutPassDTO(user);
@@ -36,46 +58,62 @@ public class UserController {
 
     @PostMapping("/login")
     public UserWithoutPassDTO loginUser(@RequestBody LoginUserDTO loginUserDTO, HttpSession session) throws SQLException {
-        //TODO exception handling, validations
         UserWithoutPassDTO loggedUser = null;
         User user = userDAO.getUserByEmail(loginUserDTO.getEmail());
         if(user == null){
-            //user doesn't exist, wrong credentials
+            throw new AuthorizationException("Wrong credentials.");
         }else{
             if(user.getPassword().equals(loginUserDTO.getPassword())){
                 //You're logged!
                 session.setAttribute(SESSION_KEY_LOGGED_USER, user);
                 loggedUser = new UserWithoutPassDTO(user);
             }else{
-                //wrong credentials
+                throw new AuthorizationException("Wrong credentials.");
             }
         }
         return loggedUser;
     }
     @PostMapping("user/logout")
-    public void logout(HttpSession session){
+    public String logout(HttpSession session){
         session.invalidate();
+        return "You've logged out.";
     }
 
     @GetMapping("users/{id}")
     public UserWithoutPassDTO getUserById(@PathVariable long id) throws SQLException {
-        //TODO validations and exception handling
         User user = userDAO.getUserById(id);
+        if(user==null){
+            throw new NotFoundException("There is no user with this id.");
+        }
         return new UserWithoutPassDTO(user);
     }
 
     @DeleteMapping("users/{id}")
-    public String deleteUser(@PathVariable long id) throws SQLException {
-        //TODO validations and exception handling
+    public String deleteUser(@PathVariable long id, HttpSession session) throws SQLException {
+        User loggedUser = (User) session.getAttribute(SESSION_KEY_LOGGED_USER);
+        if(loggedUser==null){
+            throw new AuthorizationException("You must log in.");
+        }
+        if(loggedUser.getId()!=id){
+            throw new AuthorizationException("You don't have permissions to delete this user.");
+        }
         User user = userDAO.getUserById(id);
+        if(user==null){
+            throw new NotFoundException("There is no user with this id");
+        }
         userDAO.deleteUser(user);
         return "User has been deleted";
     }
 
     @PutMapping("users/{id}")
     public UserWithoutPassDTO editUser(@PathVariable long id, HttpSession session, @RequestBody RegisterUserDTO editedUserData ) throws SQLException {
-        //TODO validations and exception handling
         User user = (User) session.getAttribute(SESSION_KEY_LOGGED_USER);
+        if(user==null){
+            throw new AuthorizationException("You must log in.");
+        }
+        if(user.getId()!=id){
+            throw new AuthorizationException("You don't have permissions to delete edit this user.");
+        }
         return userDAO.editUser(user);
     }
 }
