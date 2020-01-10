@@ -53,5 +53,31 @@ public class UserController {
         }
         return loggedUser;
     }
+    @PostMapping("user/logout")
+    public void logout(HttpSession session){
+        session.invalidate();
+    }
 
+    @GetMapping("users/{id}")
+    public UserWithoutPassDTO getUserById(@PathVariable long id) throws SQLException {
+        //TODO validations and exception handling
+        User user = userDAO.getUserById(id);
+        return new UserWithoutPassDTO(user);
+    }
+
+    @DeleteMapping("users/{id}")
+    public String deleteUser(@PathVariable long id) throws SQLException {
+        //TODO validations and exception handling
+        User user = userDAO.getUserById(id);
+        userDAO.deleteUser(user);
+        return "User has been deleted";
+    }
+
+    @PutMapping("users/{id}")
+    public UserWithoutPassDTO editUser(@PathVariable long id, HttpSession session, @RequestBody RegisterUserDTO editedUserData ) throws SQLException {
+        //TODO validations and exception handling
+        User editingUser = new User(editedUserData);
+        editingUser.setId(id);
+        return userDAO.editUser(editingUser);
+    }
 }
