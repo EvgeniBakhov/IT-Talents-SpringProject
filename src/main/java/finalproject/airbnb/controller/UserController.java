@@ -76,8 +76,7 @@ public class UserController {
     @PutMapping("users/{id}")
     public UserWithoutPassDTO editUser(@PathVariable long id, HttpSession session, @RequestBody RegisterUserDTO editedUserData ) throws SQLException {
         //TODO validations and exception handling
-        User editingUser = new User(editedUserData);
-        editingUser.setId(id);
-        return userDAO.editUser(editingUser);
+        User user = (User) session.getAttribute(SESSION_KEY_LOGGED_USER);
+        return userDAO.editUser(user);
     }
 }

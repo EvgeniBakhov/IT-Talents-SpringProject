@@ -134,6 +134,7 @@ public class UserDAO {
             statement.setString(8, user.getPassword());
             statement.setLong(9, user.getId());
             statement.executeUpdate();
+            locationDAO.editLocation(user.getLocation());
             return new UserWithoutPassDTO(getUserById(user.getId()));
         }
     }
