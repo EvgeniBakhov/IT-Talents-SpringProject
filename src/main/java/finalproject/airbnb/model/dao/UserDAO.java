@@ -1,5 +1,6 @@
 package finalproject.airbnb.model.dao;
 
+import finalproject.airbnb.model.dto.UserWithoutPassDTO;
 import finalproject.airbnb.model.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -33,7 +34,7 @@ public class UserDAO {
     public User addUser(User user) throws SQLException {
         String sql = ADD_USER_SQL;
         Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try ( PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS); ) {
+        try ( PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, user.getEmail());
             statement.setString(2, user.getFirstName());
             statement.setString(3, user.getLastName());
@@ -118,11 +119,11 @@ public class UserDAO {
         }
     }
 
-    public User editUser(User user) throws SQLException {
+    public UserWithoutPassDTO editUser(User user) throws SQLException {
         Connection connection = jdbcTemplate.getDataSource().getConnection();
         String sql = "UPDATE users SET first_name = ?, last_name = ?, " +
                 "email = ?, birthday = ?, phone_number = ?, user_description = ?, profile_picture = ?, password = ? WHERE id = ?;";
-        try (PreparedStatement statement = connection.prepareStatement(sql);) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, user.getFirstName());
             statement.setString(2, user.getLastName());
             statement.setString(3, user.getEmail());
@@ -132,7 +133,8 @@ public class UserDAO {
             statement.setString(7, user.getProfilePicture());
             statement.setString(8, user.getPassword());
             statement.setLong(9, user.getId());
-            return user;
+            statement.executeUpdate();
+            return new UserWithoutPassDTO(getUserById(user.getId()));
         }
     }
 
