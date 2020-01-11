@@ -8,6 +8,7 @@ import finalproject.airbnb.model.dto.RegisterUserDTO;
 import finalproject.airbnb.model.dto.UserWithoutPassDTO;
 import finalproject.airbnb.model.pojo.User;
 import finalproject.airbnb.model.dao.UserDAO;
+import finalproject.airbnb.utilities.LocationValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import finalproject.airbnb.utilities.UserValidator;
@@ -25,6 +26,8 @@ public class UserController extends AbstractController{
     private UserDAO userDAO;
     @Autowired
     private UserValidator userValidator;
+    @Autowired
+    private LocationValidator locationValidator;
 
     @PostMapping("/register")
     public UserWithoutPassDTO registerUser(@RequestBody RegisterUserDTO registerUserDTO, HttpSession session) throws SQLException {
@@ -47,7 +50,7 @@ public class UserController extends AbstractController{
         if(!userValidator.isValidPhoneNumber(user.getPhoneNumber())){
             throw new BadRequestException("Your number must contain from 11 to 15 characters and start with '+'");
         }
-        if(!userValidator.isValidLocation(user.getLocation())){
+        if(!locationValidator.isValidLocation(user.getLocation())){
             throw new BadRequestException("Invalid address or city or country name.");
         }
         userDAO.addUser(user);

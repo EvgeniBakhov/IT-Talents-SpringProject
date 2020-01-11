@@ -1,5 +1,6 @@
 package finalproject.airbnb.model.pojo;
 
+import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.StayDTO;
 import finalproject.airbnb.model.pojo.User;
 import lombok.AllArgsConstructor;
@@ -70,4 +71,5 @@ public class Stay {
         setStayType(stayType.valueOf(stayDTO.getStayType()));
         setPropertyType(propertyType.valueOf(stayDTO.getPropertyType()));
     }
+
 }

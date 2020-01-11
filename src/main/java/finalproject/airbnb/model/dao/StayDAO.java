@@ -45,6 +45,7 @@ public class StayDAO {
             " JOIN place_types AS p ON(s.type_id = p.id) " +
             " JOIN property_types AS pr ON(s.property_type_id = pr.id)" +
             " WHERE s.host_id = ?";
+    public static final String GET_STAY_SQL = "";
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -99,27 +100,35 @@ public class StayDAO {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             if(result.next()) {
-                return new GetStayDTO(result.getString("u.first_name"),
-                        result.getString("u.last_name"),
-                        result.getString("u.profile_picture"),
-                        new Location(result.getString("l.street_address"),
-                                result.getString("l.city"),
-                                result.getString("c.country_name")),
-                        result.getDouble("s.price"),
-                        result.getDouble("s.rating"),
-                        result.getString("s.stay_description"),
-                        result.getString("s.title"),
-                        result.getString("p.type_name"),
-                        result.getBoolean("s.instant_book"),
-                        result.getString("pr.property_type_name"),
-                        result.getString("s.rules"),
-                        result.getInt("s.num_of_beds"),
-                        result.getInt("s.num_of_bedrooms"),
-                        result.getInt("s.num_of_bathrooms"));
+                return new GetStayDTO(result);
             }
             else{
                 return null;
             }
+        }
+    }
+    public List<GetStayDTO> getStaysByUserId(long id) throws SQLException {
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(GET_STAYS_BY_USER_ID)) {
+            statement.setLong(1, id);
+            ResultSet result = statement.executeQuery();
+            List<GetStayDTO> stays = new ArrayList<>();
+            while (result.next()) {
+                GetStayDTO getStayDTO = new GetStayDTO(result);
+                stays.add(getStayDTO);
+            }
+            return stays;
+        }
+    }
+
+    public long getHostId(long id) throws SQLException {
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        String sql = "SELECT host_id FROM stays WHERE id = ?;";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, id);
+            ResultSet result = statement.executeQuery();
+            result.next();
+            return result.getLong(1);
         }
     }
 
@@ -143,45 +152,5 @@ public class StayDAO {
         }
     }*/
 
-    public List<GetStayDTO> getStaysByUserId(long id) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(GET_STAYS_BY_USER_ID)) {
-            statement.setLong(1, id);
-            ResultSet result = statement.executeQuery();
-            List<GetStayDTO> stays = new ArrayList<>();
-            while (result.next()) {
-                GetStayDTO getStayDTO = new GetStayDTO(result.getString("u.first_name"),
-                        result.getString("u.last_name"),
-                        result.getString("u.profile_picture"),
-                        new Location(result.getString("l.street_address"),
-                                result.getString("l.city"),
-                                result.getString("c.country_name")),
-                        result.getDouble("s.price"),
-                        result.getDouble("s.rating"),
-                        result.getString("s.stay_description"),
-                        result.getString("s.title"),
-                        result.getString("p.type_name"),
-                        result.getBoolean("s.instant_book"),
-                        result.getString("pr.property_type_name"),
-                        result.getString("s.rules"),
-                        result.getInt("s.num_of_beds"),
-                        result.getInt("s.num_of_bedrooms"),
-                        result.getInt("s.num_of_bathrooms"));
-                stays.add(getStayDTO);
-            }
-            return stays;
-        }
-    }
-
-    public long getHostId(long id) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        String sql = "SELECT host_id FROM stays WHERE id = ?;";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, id);
-            ResultSet result = statement.executeQuery();
-            result.next();
-            return result.getLong(1);
-        }
-    }
 
 }

@@ -14,6 +14,7 @@ import java.util.Date;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class RegisterUserDTO {
     private String email;
     private String password;

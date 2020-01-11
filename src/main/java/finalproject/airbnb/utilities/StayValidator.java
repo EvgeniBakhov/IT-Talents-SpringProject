@@ -1,5 +1,6 @@
 package finalproject.airbnb.utilities;
 
+import finalproject.airbnb.model.pojo.Location;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,22 +19,8 @@ public class StayValidator {
         return false;
     }
 
-    public boolean isValidDescription(String description) {
-        if(description != null && !description.trim().isEmpty()) {
-            return true;
-        }
-        return false;
-    }
-
     public boolean isValidTitle(String title) {
         if(title != null && !title.isEmpty() && title.length() <= MAX_TITLE_LENGTH) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isValidLocation(String location) {
-        if(location != null && !location.trim().isEmpty()) {
             return true;
         }
         return false;

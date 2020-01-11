@@ -8,6 +8,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,5 +32,25 @@ public class GetStayDTO {
     private int numOfBeds;
     private int numOfBedrooms;
     private int numOfBathrooms;
+
+    public GetStayDTO(ResultSet result) throws SQLException {
+        this(result.getString("u.first_name"),
+                result.getString("u.last_name"),
+                result.getString("u.profile_picture"),
+                new Location(result.getString("l.street_address"),
+                        result.getString("l.city"),
+                        result.getString("c.country_name")),
+                result.getDouble("s.price"),
+                result.getDouble("s.rating"),
+                result.getString("s.stay_description"),
+                result.getString("s.title"),
+                result.getString("p.type_name"),
+                result.getBoolean("s.instant_book"),
+                result.getString("pr.property_type_name"),
+                result.getString("s.rules"),
+                result.getInt("s.num_of_beds"),
+                result.getInt("s.num_of_bedrooms"),
+                result.getInt("s.num_of_bathrooms"));
+    }
 
 }
