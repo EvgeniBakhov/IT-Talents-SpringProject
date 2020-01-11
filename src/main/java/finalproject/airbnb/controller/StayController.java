@@ -4,9 +4,11 @@ package finalproject.airbnb.controller;
 import finalproject.airbnb.exceptions.AuthorizationException;
 import finalproject.airbnb.exceptions.BadRequestException;
 import finalproject.airbnb.exceptions.NotFoundException;
+import finalproject.airbnb.model.dao.BookingDAO;
 import finalproject.airbnb.model.dao.StayDAO;
 import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.StayDTO;
+import finalproject.airbnb.model.pojo.Booking;
 import finalproject.airbnb.model.pojo.Stay;
 import finalproject.airbnb.model.pojo.User;
 import finalproject.airbnb.utilities.StayValidator;
@@ -24,6 +26,8 @@ public class StayController extends AbstractController {
     private StayDAO stayDAO;
     @Autowired
     private StayValidator stayValidator;
+    @Autowired
+    private BookingDAO bookingDAO;
 
     @PostMapping("/stays")
     public Stay addStay(@RequestBody StayDTO stayDTO , HttpSession session) throws SQLException {
@@ -91,6 +95,22 @@ public class StayController extends AbstractController {
             throw new NotFoundException("Stays not found");
         }
         return stays;
+    }
+
+    @GetMapping("/stays/{id}/bookings")
+    public List<Booking> getAllBookingsForStay(@PathVariable long id, HttpSession session) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null){
+            throw new AuthorizationException();
+        }
+        if(user.getId()!=stayDAO.getHostId(id)){
+            throw new AuthorizationException("You have to be host to see stay's bookings.");
+        }
+        List<Booking> bookingsForStay = bookingDAO.getBookingByStayId(id);
+        if(bookingsForStay==null){
+            throw new NotFoundException("There are no bookings for this stay.");
+        }
+        return bookingsForStay;
     }
 
 

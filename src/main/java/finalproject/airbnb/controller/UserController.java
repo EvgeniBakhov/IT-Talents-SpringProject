@@ -3,9 +3,11 @@ package finalproject.airbnb.controller;
 import finalproject.airbnb.exceptions.AuthorizationException;
 import finalproject.airbnb.exceptions.BadRequestException;
 import finalproject.airbnb.exceptions.NotFoundException;
+import finalproject.airbnb.model.dao.BookingDAO;
 import finalproject.airbnb.model.dto.LoginUserDTO;
 import finalproject.airbnb.model.dto.RegisterUserDTO;
 import finalproject.airbnb.model.dto.UserWithoutPassDTO;
+import finalproject.airbnb.model.pojo.Booking;
 import finalproject.airbnb.model.pojo.User;
 import finalproject.airbnb.model.dao.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import finalproject.airbnb.utilities.UserValidator;
 
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
+import java.util.List;
 
 
 @RestController
@@ -25,6 +28,8 @@ public class UserController extends AbstractController{
     private UserDAO userDAO;
     @Autowired
     private UserValidator userValidator;
+    @Autowired
+    private BookingDAO bookingDAO;
 
     @PostMapping("/register")
     public UserWithoutPassDTO registerUser(@RequestBody RegisterUserDTO registerUserDTO, HttpSession session) throws SQLException {
@@ -73,13 +78,13 @@ public class UserController extends AbstractController{
         }
         return loggedUser;
     }
-    @PostMapping("user/logout")
+    @PostMapping("/user/logout")
     public String logout(HttpSession session){
         session.invalidate();
         return "You've logged out.";
     }
 
-    @GetMapping("users/{id}")
+    @GetMapping("/users/{id}")
     public UserWithoutPassDTO getUserById(@PathVariable long id) throws SQLException {
         User user = userDAO.getUserById(id);
         if(user==null){
@@ -88,7 +93,7 @@ public class UserController extends AbstractController{
         return new UserWithoutPassDTO(user);
     }
 
-    @DeleteMapping("users/{id}")
+    @DeleteMapping("/users/{id}")
     public String deleteUser(@PathVariable long id, HttpSession session) throws SQLException {
         User loggedUser = (User) session.getAttribute(SESSION_KEY_LOGGED_USER);
         if(loggedUser==null){
@@ -105,7 +110,7 @@ public class UserController extends AbstractController{
         return "User has been deleted";
     }
 
-    @PutMapping("users/{id}")
+    @PutMapping("/users/{id}")
     public UserWithoutPassDTO editUser(@PathVariable long id, HttpSession session, @RequestBody RegisterUserDTO editedUserData ) throws SQLException {
         User user = (User) session.getAttribute(SESSION_KEY_LOGGED_USER);
         if(user==null){
@@ -115,5 +120,22 @@ public class UserController extends AbstractController{
             throw new AuthorizationException("You don't have permissions to delete edit this user.");
         }
         return userDAO.editUser(user);
+    }
+
+    @GetMapping("/users/{id}/bookings")
+    public List<Booking> getAllBookingsByUser(@PathVariable long id, HttpSession session) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user==null){
+            throw new AuthorizationException();
+        }
+        if(user.getId()!=id){
+            throw new AuthorizationException("You have no permissions to see bookings of this user.");
+        }
+        List<Booking> allBookings;
+        allBookings = bookingDAO.getAllBookingsByUserId(user.getId());
+        if(allBookings == null){
+            throw new NotFoundException("You haven't any bookings yet.");
+        }
+        return allBookings;
     }
 }
