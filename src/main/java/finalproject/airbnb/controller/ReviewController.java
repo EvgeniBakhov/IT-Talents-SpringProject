@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
+import java.util.List;
 
 @RestController
 public class ReviewController extends AbstractController {
@@ -62,5 +63,20 @@ public class ReviewController extends AbstractController {
         return "Review deleted!";
     }
 
+    @PutMapping("reviews/{id}")
+    public ReviewDTO editReview(@RequestBody ReviewDTO reviewDTO, @PathVariable long id, HttpSession session) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null) {
+            throw new AuthorizationException();
+        }
+        Review review = reviewDAO.getReviewById(id);
+        if(review == null) {
+            throw new NotFoundException("Review not found");
+        }
+        if(user.getId() != review.getUser().getId()) {
+            throw new AuthorizationException("You don't have permissions to edit this review!");
+        }
+        return reviewDAO.editReview(id, reviewDTO);
+    }
 
 }

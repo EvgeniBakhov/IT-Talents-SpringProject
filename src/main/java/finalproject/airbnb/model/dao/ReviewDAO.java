@@ -1,5 +1,6 @@
 package finalproject.airbnb.model.dao;
 
+import finalproject.airbnb.model.dto.ReviewDTO;
 import finalproject.airbnb.model.dto.UserReviewDTO;
 import finalproject.airbnb.model.pojo.Review;
 import finalproject.airbnb.model.pojo.User;
@@ -8,11 +9,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class ReviewDAO {
 
-    public static final String ADD_REVIEW_SQL = "INSERT INTO reviews (user_id, " +
+    private static final String ADD_REVIEW_SQL = "INSERT INTO reviews (user_id, " +
             "stay_id, " +
             "comment_text, " +
             "cleanliness_rating, " +
@@ -22,12 +25,18 @@ public class ReviewDAO {
             "value_rating, " +
             "location_rating) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
-    public static final String GET_REVIEW_BY_USER_ID_AND_STAY_ID = "SELECT id, user_id, stay_id, comment_text," +
+    private static final String GET_REVIEW_BY_USER_ID_AND_STAY_ID = "SELECT id, user_id, stay_id, comment_text," +
             " cleanliness_rating, check_in_rating, accuracy_rating, communication_rating, value_rating, location_rating " +
             "FROM reviews WHERE user_id = ? AND stay_id = ?";
-    public static final String DELETE_REVIEW_SQL = "DELETE FROM reviews WHERE id = ?;";
-    public static final String GET_REVIEW_BY_ID_SQL = "SELECT id, user_id, stay_id, comment_text, cleanliness_rating, " +
+    private static final String DELETE_REVIEW_SQL = "DELETE FROM reviews WHERE id = ?;";
+    private static final String GET_REVIEW_BY_ID_SQL = "SELECT id, user_id, stay_id, comment_text, cleanliness_rating, " +
             "check_in_rating, accuracy_rating, communication_rating, value_rating, location_rating FROM reviews WHERE id = ?";
+    private static final String GET_REVIEW_BY_STAY_ID_SQL = "SELECT id, user_id, stay_id, comment_text, cleanliness_rating, " +
+            "check_in_rating, accuracy_rating, communication_rating, value_rating, location_rating FROM reviews WHERE stay_id = ?";
+    private static final String EDIT_REVIEW_SQL = "UPDATE reviews SET comment_text = ?, cleanliness_rating = ?, " +
+            "check_in_rating = ?, accuracy_rating = ?, communication_rating = ?, value_rating = ?, location_rating = ? WHERE id = ?;";
+    private static final String GET_REVIEWS_BY_USER_ID_SQL = "SELECT id, user_id, stay_id, comment_text, cleanliness_rating, " +
+            "check_in_rating, accuracy_rating, communication_rating, value_rating, location_rating FROM reviews WHERE user_id = ?";
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -106,6 +115,66 @@ public class ReviewDAO {
         }
     }
 
+    public List<Review> getReviewsByStayId(long stayId) throws SQLException {
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(GET_REVIEW_BY_STAY_ID_SQL)) {
+            statement.setLong(1, stayId);
+            ResultSet result = statement.executeQuery();
+            List<Review> reviews = new ArrayList<>();
+            while (result.next()) {
+                Review review = new Review(result.getLong("id"),
+                        result.getLong("stay_id"),
+                        new UserReviewDTO(userDAO.getUserById(result.getLong("user_id"))),
+                        result.getString("comment_text"),
+                        result.getInt("cleanliness_rating"),
+                        result.getInt("check_in_rating"),
+                        result.getInt("accuracy_rating"),
+                        result.getInt("communication_rating"),
+                        result.getInt("value_rating"),
+                        result.getInt("location_rating"));
+                reviews.add(review);
+            }
+            return reviews;
+        }
+    }
 
+    public List<Review> getReviewsByUserId(long userId) throws SQLException {
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(GET_REVIEWS_BY_USER_ID_SQL)) {
+            statement.setLong(1, userId);
+            ResultSet result = statement.executeQuery();
+            List<Review> reviews = new ArrayList<>();
+            while (result.next()) {
+                Review review = new Review(result.getLong("id"),
+                        result.getLong("stay_id"),
+                        new UserReviewDTO(userDAO.getUserById(result.getLong("user_id"))),
+                        result.getString("comment_text"),
+                        result.getInt("cleanliness_rating"),
+                        result.getInt("check_in_rating"),
+                        result.getInt("accuracy_rating"),
+                        result.getInt("communication_rating"),
+                        result.getInt("value_rating"),
+                        result.getInt("location_rating"));
+                reviews.add(review);
+            }
+            return reviews;
+        }
+    }
+
+    public ReviewDTO editReview(long id, ReviewDTO reviewDTO) throws SQLException {
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(EDIT_REVIEW_SQL)) {
+            statement.setString(1, reviewDTO.getComment());
+            statement.setInt(2, reviewDTO.getCleanlinessRating());
+            statement.setInt(3, reviewDTO.getCheckInRating());
+            statement.setInt(4, reviewDTO.getAccuracyRating());
+            statement.setInt(5, reviewDTO.getCommunicationRating());
+            statement.setInt(6, reviewDTO.getValueRating());
+            statement.setInt(7, reviewDTO.getLocationRating());
+            statement.setLong(8, id);
+            statement.executeUpdate();
+            return reviewDTO;
+        }
+    }
 
 }

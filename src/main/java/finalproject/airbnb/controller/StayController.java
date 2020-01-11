@@ -4,9 +4,11 @@ package finalproject.airbnb.controller;
 import finalproject.airbnb.exceptions.AuthorizationException;
 import finalproject.airbnb.exceptions.BadRequestException;
 import finalproject.airbnb.exceptions.NotFoundException;
+import finalproject.airbnb.model.dao.ReviewDAO;
 import finalproject.airbnb.model.dao.StayDAO;
 import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.StayDTO;
+import finalproject.airbnb.model.pojo.Review;
 import finalproject.airbnb.model.pojo.Stay;
 import finalproject.airbnb.model.pojo.User;
 import finalproject.airbnb.utilities.LocationValidator;
@@ -27,7 +29,8 @@ public class StayController extends AbstractController {
     private StayValidator stayValidator;
     @Autowired
     private LocationValidator locationValidator;
-
+    @Autowired
+    private ReviewDAO reviewDAO;
 
     @PostMapping("/stays")
     public Stay addStay(@RequestBody StayDTO stayDTO, HttpSession session) throws SQLException {
@@ -92,5 +95,17 @@ public class StayController extends AbstractController {
         return stays;
     }
 
+    @GetMapping("/stays/{id}/reviews")
+    public List<Review> getReviewsForStay(@PathVariable long id, HttpSession session) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null) {
+            throw new AuthorizationException();
+        }
+        List<Review> reviews = reviewDAO.getReviewsByStayId(id);
+        if(reviews.isEmpty()) {
+            throw new NotFoundException("No reviews for stay");
+        }
+        return reviews;
+    }
 
 }

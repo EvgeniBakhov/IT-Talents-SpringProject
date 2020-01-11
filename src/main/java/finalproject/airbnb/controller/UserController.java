@@ -3,9 +3,11 @@ package finalproject.airbnb.controller;
 import finalproject.airbnb.exceptions.AuthorizationException;
 import finalproject.airbnb.exceptions.BadRequestException;
 import finalproject.airbnb.exceptions.NotFoundException;
+import finalproject.airbnb.model.dao.ReviewDAO;
 import finalproject.airbnb.model.dto.LoginUserDTO;
 import finalproject.airbnb.model.dto.RegisterUserDTO;
 import finalproject.airbnb.model.dto.UserWithoutPassDTO;
+import finalproject.airbnb.model.pojo.Review;
 import finalproject.airbnb.model.pojo.User;
 import finalproject.airbnb.model.dao.UserDAO;
 import finalproject.airbnb.utilities.LocationValidator;
@@ -15,6 +17,7 @@ import finalproject.airbnb.utilities.UserValidator;
 
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
+import java.util.List;
 
 
 @RestController
@@ -28,6 +31,8 @@ public class UserController extends AbstractController{
     private UserValidator userValidator;
     @Autowired
     private LocationValidator locationValidator;
+    @Autowired
+    private ReviewDAO reviewDAO;
 
     @PostMapping("/register")
     public UserWithoutPassDTO registerUser(@RequestBody RegisterUserDTO registerUserDTO, HttpSession session) throws SQLException {
@@ -118,5 +123,18 @@ public class UserController extends AbstractController{
             throw new AuthorizationException("You don't have permissions to delete edit this user.");
         }
         return userDAO.editUser(user);
+    }
+
+    @GetMapping("/users/{id}/reviews")
+    public List<Review> getUserReviews(@PathVariable long id, HttpSession session) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null) {
+            throw new AuthorizationException();
+        }
+        List<Review> reviews = reviewDAO.getReviewsByUserId(id);
+        if(reviews.isEmpty()) {
+            throw new NotFoundException("No reviews made by user");
+        }
+        return reviews;
     }
 }
