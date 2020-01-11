@@ -4,13 +4,16 @@ package finalproject.airbnb.controller;
 import finalproject.airbnb.exceptions.AuthorizationException;
 import finalproject.airbnb.exceptions.BadRequestException;
 import finalproject.airbnb.exceptions.NotFoundException;
+import finalproject.airbnb.model.dao.ReviewDAO;
 import finalproject.airbnb.model.dao.BookingDAO;
 import finalproject.airbnb.model.dao.StayDAO;
 import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.StayDTO;
+import finalproject.airbnb.model.pojo.Review;
 import finalproject.airbnb.model.pojo.Booking;
 import finalproject.airbnb.model.pojo.Stay;
 import finalproject.airbnb.model.pojo.User;
+import finalproject.airbnb.utilities.LocationValidator;
 import finalproject.airbnb.utilities.StayValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -28,34 +31,33 @@ public class StayController extends AbstractController {
     private StayValidator stayValidator;
     @Autowired
     private BookingDAO bookingDAO;
+    @Autowired
+    private LocationValidator locationValidator;
+    @Autowired
+    private ReviewDAO reviewDAO;
 
     @PostMapping("/stays")
-    public Stay addStay(@RequestBody StayDTO stayDTO , HttpSession session) throws SQLException {
+    public Stay addStay(@RequestBody StayDTO stayDTO, HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
         if(user == null) {
             throw new AuthorizationException();
         }
-        if(!stayValidator.isValidLocation(stayDTO.getStreetAddress()) ||
-            !stayValidator.isValidLocation(stayDTO.getCity()) ||
-            !stayValidator.isValidLocation(stayDTO.getCountry())) {
-            throw new BadRequestException("Invalid location!");
-        }
-        if(!stayValidator.isValidDescription(stayDTO.getDescription())) {
-            throw new BadRequestException("Invalid description!");
-        }
-        if(!stayValidator.isValidPrice(stayDTO.getPrice())) {
-            throw new BadRequestException("Invalid price!");
-        }
-        if(!stayValidator.isValidTitle(stayDTO.getTitle())) {
-            throw new BadRequestException("Invalid title!");
-        }
-        if(!stayValidator.isValidNumOfBathrooms(stayDTO.getNumOfBathrooms()) ||
-            !stayValidator.isValidNumOfBeds(stayDTO.getNumOfBeds()) ||
-            !stayValidator.isValidNumOfBedrooms(stayDTO.getNumOfBedrooms())) {
-            throw new BadRequestException("Number must be between 1 and 50!");
-        }
         Stay stay = new Stay(stayDTO);
         stay.setHost(user);
+        if(!locationValidator.isValidLocation(stay.getLocation())) {
+            throw new BadRequestException("Invalid location!");
+        }
+        if(!stayValidator.isValidPrice(stay.getPrice())) {
+            throw new BadRequestException("Invalid price!");
+        }
+        if(!stayValidator.isValidTitle(stay.getTitle())) {
+            throw new BadRequestException("Invalid title!");
+        }
+        if(!stayValidator.isValidNumOfBathrooms(stay.getNumOfBathrooms()) ||
+            !stayValidator.isValidNumOfBeds(stay.getNumOfBeds()) ||
+            !stayValidator.isValidNumOfBedrooms(stay.getNumOfBedrooms())) {
+            throw new BadRequestException("Number must be between 1 and 50!");
+        }
         stayDAO.addStay(stay);
         return stay;
     }
@@ -75,11 +77,11 @@ public class StayController extends AbstractController {
         if(user == null) {
             throw new AuthorizationException();
         }
-        if(user.getId() != stayDAO.getHostId(id)) {
-            throw new AuthorizationException("You don't have permissions to delete this stay!");
-        }
         if(stayDAO.getStayById(id) == null) {
             throw new NotFoundException("Stay not found");
+        }
+        if(user.getId() != stayDAO.getHostId(id)) {
+            throw new AuthorizationException("You don't have permissions to delete this stay!");
         }
         return stayDAO.deleteStay(id);
     }
@@ -97,6 +99,18 @@ public class StayController extends AbstractController {
         return stays;
     }
 
+    @GetMapping("/stays/{id}/reviews")
+    public List<Review> getReviewsForStay(@PathVariable long id, HttpSession session) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null) {
+            throw new AuthorizationException();
+        }
+        List<Review> reviews = reviewDAO.getReviewsByStayId(id);
+        if(reviews.isEmpty()) {
+            throw new NotFoundException("No reviews for stay");
+        }
+        return reviews;
+    }
     @GetMapping("/stays/{id}/bookings")
     public List<Booking> getAllBookingsForStay(@PathVariable long id, HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);

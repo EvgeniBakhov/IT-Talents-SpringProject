@@ -46,20 +46,6 @@ public class UserValidator {
         return false;
     }
 
-    public boolean isValidLocation(Location location) {
-       if(!location.getAddress().matches("[A-z0-9-. ]{10,100}$")){
-        return false;
-       }
-       if(!location.getCity().matches("[A-z- ]{3,30}$")){
-        return false;
-       }
-       if(!location.getCountry().matches("[A-z- ]{3,20}")){
-        return false;
-       }
-       return true;
-    }
-
-
     public boolean isValidPassword(String password) {
         if(password != null && password.isEmpty() && password.matches(PASSWORD_REGEX)){
             return true;

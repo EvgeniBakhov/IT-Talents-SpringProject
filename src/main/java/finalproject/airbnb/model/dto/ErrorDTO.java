@@ -1,4 +1,4 @@
-package finalproject.airbnb.model.dao;
+package finalproject.airbnb.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
