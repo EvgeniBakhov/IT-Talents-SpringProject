@@ -16,8 +16,13 @@ import finalproject.airbnb.utilities.LocationValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import finalproject.airbnb.utilities.UserValidator;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
+import javax.swing.*;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -160,6 +165,19 @@ public class UserController extends AbstractController{
         }
         return allBookings;
     }
-
-
+    @PostMapping("/addPicture")
+    public String addPicture(@RequestParam ("file") MultipartFile file, HttpSession session) throws IOException, SQLException {
+        User user = (User) session.getAttribute(SESSION_KEY_LOGGED_USER);
+        if(user == null){
+            throw new AuthorizationException();
+        }
+        if(file==null){
+            throw new BadRequestException("Cannot upload the file.");
+        }
+        String uploadFolder = "C:\\Users\\ostne\\IdeaProjects\\airbnb-spring\\src\\main\\resources\\static\\profilePictures\\";
+        File localFile  = new File (uploadFolder + file.getOriginalFilename());
+        Files.copy(file.getInputStream(), localFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        userDAO.addPicture(localFile.toPath().toString(), user.getId());
+        return "Photo added.";
+    }
 }

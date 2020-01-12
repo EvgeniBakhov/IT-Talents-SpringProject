@@ -17,8 +17,13 @@ import finalproject.airbnb.utilities.LocationValidator;
 import finalproject.airbnb.utilities.StayValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -156,5 +161,34 @@ public class StayController extends AbstractController {
             throw new AuthorizationException("You have to be host to accept stay's bookings.");
         }
         return bookingDAO.acceptBooking(booking);
+    }
+    @PostMapping("/stays/{id}/addImage")
+    public String addImage(@PathVariable long id, @RequestParam ("file") MultipartFile file, HttpSession session) throws SQLException, IOException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null){
+            throw new AuthorizationException();
+        }
+        if(stayDAO.getStayById(id).getHost().getId()!=user.getId()){
+            throw new AuthorizationException("You must be a host to add the image to this stay.");
+        }
+        if(file==null){
+            throw new BadRequestException("Cannot upload this file");
+        }
+        String uploadFolder = "C:\\Users\\ostne\\IdeaProjects\\airbnb-spring\\src\\main\\resources\\static\\profilePictures\\stayPictures\\";
+        File localFile  = new File (uploadFolder + file.getOriginalFilename());
+        Files.copy(file.getInputStream(), localFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        stayDAO.addImage(localFile.toPath().toString(), id);
+        return "Photo added.";
+    }
+    @GetMapping("/stays/{id}/images")
+    public List<String> getStayImages(@PathVariable long id) throws SQLException {
+        if(stayDAO.getStayById(id)== null) {
+            throw new NotFoundException("Stay not found");
+        }
+        List<String> images = stayDAO.getStayImages(id);
+        if(images.isEmpty()){
+            throw new NotFoundException("Stay doesn't have images");
+        }
+        return images;
     }
 }

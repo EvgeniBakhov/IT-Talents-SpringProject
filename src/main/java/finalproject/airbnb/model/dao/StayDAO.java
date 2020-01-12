@@ -6,6 +6,7 @@ import finalproject.airbnb.model.pojo.Stay;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -15,6 +16,8 @@ import java.util.List;
 public class StayDAO {
     public static final String UPDATE_STAY_RATING_SQL = "UPDATE stays SET rating = ? WHERE id = ?;";
     public static final String GET_HOST_ID_SQL = "SELECT host_id FROM stays WHERE id = ?;";
+    private static final String ADD_PICTURE_SQL = "INSERT INTO pictures (stay_id, picture_url) VALUES(?, ?);";
+    private static final String GET_STAY_PICTURES_URL = "SELECT picture_url FROM pictures WHERE stay_id = ?";
     @Autowired
     UserDAO userDAO;
     private static final String ADD_STAY_SQL = "INSERT INTO stays (host_id, location_id, price, stay_description, title, type_id, " +
@@ -183,5 +186,26 @@ public class StayDAO {
             statement.setLong(2, id);
             statement.executeUpdate();
         }
+    }
+
+
+    public String addImage(String path, long id) throws SQLException {
+        try(Connection connection = jdbcTemplate.getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(ADD_PICTURE_SQL)){
+            statement.setLong(1, id);
+            statement.setString(2, path);
+            statement.executeUpdate();
+        }
+        return path;
+    }
+    public List<String> getStayImages(long stayId) throws SQLException {
+        List<String> imagePaths = new ArrayList<>();
+        try(Connection connection = jdbcTemplate.getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(GET_STAY_PICTURES_URL)){
+            statement.setLong(1, stayId);
+            ResultSet result = statement.executeQuery();
+            while(result.next()){
+                imagePaths.add(result.getString("picture_url"));
+            }
+        }
+        return imagePaths;
     }
 }

@@ -22,6 +22,7 @@ public class UserDAO {
             "JOIN countries AS c ON (l.country_id = c.id) WHERE u.email = ?;";
     private static final String EDIT_USER_SQL = "UPDATE users SET first_name = ?, last_name = ?, " +
             "email = ?, birthday = ?, phone_number = ?, user_description = ?, profile_picture = ?, password = ? WHERE id = ?;";
+    private static final String ADD_PICTURE_SQL = "UPDATE users SET profile_picture = ? WHERE id = ?";
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -138,4 +139,11 @@ public class UserDAO {
         }
     }
 
+    public void addPicture(String filePath, long id) throws SQLException {
+        try(Connection connection = jdbcTemplate.getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(ADD_PICTURE_SQL)){
+            statement.setString(1, filePath);
+            statement.setLong(2, id);
+            statement.executeUpdate();
+        }
+    }
 }
