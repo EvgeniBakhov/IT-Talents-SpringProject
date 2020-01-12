@@ -3,10 +3,7 @@ package finalproject.airbnb.model.dto;
 import finalproject.airbnb.model.pojo.Location;
 import finalproject.airbnb.model.pojo.Stay;
 import finalproject.airbnb.model.pojo.User;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -51,6 +48,24 @@ public class GetStayDTO {
                 result.getInt("s.num_of_beds"),
                 result.getInt("s.num_of_bedrooms"),
                 result.getInt("s.num_of_bathrooms"));
+    }
+
+    public GetStayDTO(Stay stay){
+        setHostFirstName(stay.getHost().getFirstName());
+        setHostLastName(stay.getHost().getLastName());
+        setDescription(stay.getDescription());
+        setHostProfilePicture(stay.getHost().getProfilePicture());
+        setInstantBook(stay.isInstantBook());
+        setLocation(stay.getLocation());
+        setNumOfBathrooms(stay.getNumOfBathrooms());
+        setNumOfBedrooms(stay.getNumOfBedrooms());
+        setNumOfBeds(stay.getNumOfBeds());
+        setPrice(stay.getPrice());
+        setPropertyType(stay.getPropertyType().toString());
+        setRules(stay.getRules());
+        setRating(stay.getRating());
+        setTitle(stay.getTitle());
+        setType(stay.getStayType().toString());
     }
 
 }

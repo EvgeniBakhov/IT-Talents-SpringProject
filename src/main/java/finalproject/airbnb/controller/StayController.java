@@ -64,7 +64,7 @@ public class StayController extends AbstractController {
 
     @GetMapping("/stays/{id}")
     public GetStayDTO getStay(@PathVariable long id) throws SQLException {
-        GetStayDTO getStayDTO = stayDAO.getStayById(id);
+        GetStayDTO getStayDTO = new GetStayDTO(stayDAO.getStayById(id));
         if(getStayDTO == null) {
             throw new NotFoundException("Stay not found");
         }
@@ -126,6 +126,35 @@ public class StayController extends AbstractController {
         }
         return bookingsForStay;
     }
+    @GetMapping("/stays/{id}/unaccepted")
+    public List<Booking> getAllUnacceptedBookings(@PathVariable long id, HttpSession session) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null){
+            throw new AuthorizationException();
+        }
+        if(user.getId()!=stayDAO.getHostId(id)){
+            throw new AuthorizationException("You have to be host to see stay's bookings.");
+        }
+        List<Booking> unacceptedBookings = bookingDAO.getUnacceptedBookingByStayId(id);
+        if(unacceptedBookings==null){
+            throw new NotFoundException("There are no unaccepted bookings for this stay.");
+        }
+        return unacceptedBookings;
+    }
 
-
+    @PutMapping("bookings/{id}")
+    public String acceptBooking(@PathVariable long id, HttpSession session) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null){
+            throw new AuthorizationException();
+        }
+        Booking booking = bookingDAO.getBookingById(id);
+        if(booking == null) {
+            throw new BadRequestException("Booking doesn't exist");
+        }
+        if(user.getId() != stayDAO.getStayById(booking.getStayId()).getHost().getId()){
+            throw new AuthorizationException("You have to be host to accept stay's bookings.");
+        }
+        return bookingDAO.acceptBooking(booking);
+    }
 }

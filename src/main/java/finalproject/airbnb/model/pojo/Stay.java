@@ -26,6 +26,7 @@ public class Stay {
 
         public int getPropertyTypeId() {
             return propertyTypeId;
+
         }
     }
 
