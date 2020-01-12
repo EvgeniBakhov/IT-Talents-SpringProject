@@ -43,6 +43,9 @@ public class UserController extends AbstractController{
         if(!registerUserDTO.getPassword().equals(registerUserDTO.getConfirmPassword())){
             throw new BadRequestException("Passwords don't match.");
         }
+        if(userDAO.getUserByEmail(registerUserDTO.getEmail()) != null) {
+            throw new BadRequestException("User with the same email already exists!");
+        }
         User user = new User(registerUserDTO);
         if(!userValidator.isValidName(user.getFirstName()) || !userValidator.isValidName(user.getLastName())){
             throw new BadRequestException("Your first name and your last name must contain from 2 to 30 symbols.");
@@ -51,7 +54,7 @@ public class UserController extends AbstractController{
             throw new BadRequestException("Email is not valid.");
         }
         if(!userValidator.isValidPassword(user.getPassword())){
-            throw new BadRequestException("Your password must contain at least 8 characters and at least 1 uppercase letter.");
+            throw new BadRequestException("Your password must contain at least 8 characters, at least 1 uppercase letter and number.");
         }
         if(!userValidator.isValidBirthday(user.getBirthday())){
             throw new BadRequestException("You must be at least 18 years old to register.");

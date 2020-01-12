@@ -6,45 +6,30 @@ import org.springframework.stereotype.Component;
 @Component
 public class StayValidator {
 
-    public static final int MAX_STAY_PRICE = 100000;
-    public static final int MAX_TITLE_LENGTH = 100;
-    public static final int MAX_BEDROOMS = 50;
-    public static final int MAX_BEDS = 50;
-    public static final int MAX_BATHROOMS = 50;
+    private static final int MAX_STAY_PRICE = 100000;
+    private static final int MAX_TITLE_LENGTH = 100;
+    private static final int MAX_BEDROOMS = 50;
+    private static final int MAX_BEDS = 50;
+    private static final int MAX_BATHROOMS = 50;
 
     public boolean isValidPrice(double price) {
-        if(price >= 0 && price < MAX_STAY_PRICE) {
-            return true;
-        }
-        return false;
+        return price >= 0 && price < MAX_STAY_PRICE;
     }
 
     public boolean isValidTitle(String title) {
-        if(title != null && !title.isEmpty() && title.length() <= MAX_TITLE_LENGTH) {
-            return true;
-        }
-        return false;
+        return title != null && !title.isEmpty() && title.length() <= MAX_TITLE_LENGTH;
     }
 
     public boolean isValidNumOfBeds(int numOfBeds) {
-        if(numOfBeds >= 1 && numOfBeds <= MAX_BEDS) {
-            return true;
-        }
-        return false;
+        return numOfBeds >= 1 && numOfBeds <= MAX_BEDS;
     }
 
     public boolean isValidNumOfBedrooms(int numOfBedrooms) {
-        if(numOfBedrooms >= 1 && numOfBedrooms <= MAX_BEDROOMS) {
-            return true;
-        }
-        return false;
+        return numOfBedrooms >= 1 && numOfBedrooms <= MAX_BEDROOMS;
     }
 
     public boolean isValidNumOfBathrooms(int numOfBathrooms) {
-        if(numOfBathrooms >= 1 && numOfBathrooms <= MAX_BATHROOMS) {
-            return true;
-        }
-        return false;
+        return numOfBathrooms >= 1 && numOfBathrooms <= MAX_BATHROOMS;
     }
 
 }

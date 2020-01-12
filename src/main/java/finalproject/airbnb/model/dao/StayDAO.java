@@ -2,10 +2,7 @@ package finalproject.airbnb.model.dao;
 
 
 import finalproject.airbnb.model.dto.GetStayDTO;
-import finalproject.airbnb.model.dto.StayDTO;
-import finalproject.airbnb.model.pojo.Location;
 import finalproject.airbnb.model.pojo.Stay;
-import finalproject.airbnb.model.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -16,6 +13,8 @@ import java.util.List;
 
 @Component
 public class StayDAO {
+    public static final String UPDATE_STAY_RATING_SQL = "UPDATE stays SET rating = ? WHERE id = ?;";
+    public static final String GET_HOST_ID_SQL = "SELECT host_id FROM stays WHERE id = ?;";
     @Autowired
     UserDAO userDAO;
     private static final String ADD_STAY_SQL = "INSERT INTO stays (host_id, location_id, price, stay_description, title, type_id, " +
@@ -72,12 +71,13 @@ public class StayDAO {
         }
         finally {
             connection.setAutoCommit(true);
+            connection.close();
         }
     }
 
     public String deleteStay(long id) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(DELETE_STAY_SQL)) {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE_STAY_SQL)) {
             statement.setLong(1, id);
             statement.executeUpdate();
         }
@@ -85,8 +85,8 @@ public class StayDAO {
     }
 
     public Stay getStayById(long id) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try(PreparedStatement statement = connection.prepareStatement(GET_STAY_BY_ID_SQL, Statement.RETURN_GENERATED_KEYS)) {
+        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
+            PreparedStatement statement = connection.prepareStatement(GET_STAY_BY_ID_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             if(result.next()) {
@@ -107,14 +107,14 @@ public class StayDAO {
                         getPropertyTypeById(result.getLong("property_type_id"))
                 );
             }
-            else{
+            else {
                 return null;
             }
         }
     }
     public List<GetStayDTO> getStaysByUserId(long id) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(GET_STAYS_BY_USER_ID)) {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_STAYS_BY_USER_ID)) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             List<GetStayDTO> stays = new ArrayList<>();
@@ -127,9 +127,8 @@ public class StayDAO {
     }
 
     public long getHostId(long id) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        String sql = "SELECT host_id FROM stays WHERE id = ?;";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_HOST_ID_SQL)) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             result.next();
@@ -177,4 +176,12 @@ public class StayDAO {
     }
 
 
+    public void updateRating(long id, double updatedRating) throws SQLException {
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(UPDATE_STAY_RATING_SQL)) {
+            statement.setDouble(1, updatedRating);
+            statement.setLong(2, id);
+            statement.executeUpdate();
+        }
+    }
 }

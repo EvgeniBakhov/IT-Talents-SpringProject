@@ -8,6 +8,7 @@ import finalproject.airbnb.model.dao.StayDAO;
 import finalproject.airbnb.model.dto.ReviewDTO;
 import finalproject.airbnb.model.dto.UserReviewDTO;
 import finalproject.airbnb.model.pojo.Review;
+import finalproject.airbnb.model.pojo.Stay;
 import finalproject.airbnb.model.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.sql.SQLException;
 @RestController
 public class ReviewController extends AbstractController {
 
+    public static final int RATING_TYPES_COUNT = 6;
     @Autowired
     private ReviewDAO reviewDAO;
     @Autowired
@@ -38,6 +40,7 @@ public class ReviewController extends AbstractController {
         review.setUser(new UserReviewDTO(user));
         review.setStayId(id);
         reviewDAO.addReview(review);
+        updateStayRating(review);
         return review;
     }
 
@@ -72,6 +75,17 @@ public class ReviewController extends AbstractController {
             throw new AuthorizationException("You don't have permissions to edit this review!");
         }
         return reviewDAO.editReview(id, reviewDTO);
+    }
+
+    private void updateStayRating(Review review) throws SQLException {
+        Stay stay = stayDAO.getStayById(review.getStayId());
+        double currentStayRating = stay.getRating();
+        int numberOfStayReviews = reviewDAO.getReviewsByStayId(stay.getId()).size();
+        double avgReviewRating = (double)(review.getCleanlinessRating() + review.getAccuracyRating() +
+                review.getCommunicationRating() + review.getCheckInRating() +
+                review.getLocationRating() + review.getValueRating()) / RATING_TYPES_COUNT;
+        double updatedRating = ((numberOfStayReviews * currentStayRating) + avgReviewRating ) / (numberOfStayReviews + 1);
+        stayDAO.updateRating(stay.getId(), updatedRating);
     }
 
 }

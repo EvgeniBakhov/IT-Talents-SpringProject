@@ -41,8 +41,8 @@ public class UserDAO {
     private LocDAO locationDAO;
 
     public User addUser(User user) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try ( PreparedStatement statement = connection.prepareStatement(ADD_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
+        try ( Connection connection = jdbcTemplate.getDataSource().getConnection();
+              PreparedStatement statement = connection.prepareStatement(ADD_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, user.getEmail());
             statement.setString(2, user.getFirstName());
             statement.setString(3, user.getLastName());
@@ -62,8 +62,8 @@ public class UserDAO {
     }
 
     public User deleteUser(User user) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(DELETE_USER_SQL);) {
+        try ( Connection connection = jdbcTemplate.getDataSource().getConnection();
+              PreparedStatement statement = connection.prepareStatement(DELETE_USER_SQL);) {
             statement.setLong(1, user.getId());
             statement.executeUpdate();
             return user;
@@ -71,8 +71,8 @@ public class UserDAO {
     }
 
     public User getUserById(long id) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(GET_USER_BY_ID_SQL);) {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_USER_BY_ID_SQL);) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             if(result.next()) {
@@ -96,8 +96,8 @@ public class UserDAO {
     }
 
     public User getUserByEmail(String email) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(GET_USER_BY_EMAIL_SQL)) {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_USER_BY_EMAIL_SQL)) {
             statement.setString(1, email);
             ResultSet result = statement.executeQuery();
             if(result.next()) {
@@ -121,8 +121,8 @@ public class UserDAO {
     }
 
     public UserWithoutPassDTO editUser(User user) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(EDIT_USER_SQL)) {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(EDIT_USER_SQL)) {
             statement.setString(1, user.getFirstName());
             statement.setString(2, user.getLastName());
             statement.setString(3, user.getEmail());

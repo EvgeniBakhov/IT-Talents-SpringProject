@@ -142,7 +142,7 @@ public class StayController extends AbstractController {
         return unacceptedBookings;
     }
 
-    @PutMapping("bookings/{id}")
+    @PutMapping("/bookings/{id}")
     public String acceptBooking(@PathVariable long id, HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
         if(user == null){

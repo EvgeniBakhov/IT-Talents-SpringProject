@@ -3,6 +3,7 @@ package finalproject.airbnb.model.dao;
 import finalproject.airbnb.model.dto.ReviewDTO;
 import finalproject.airbnb.model.dto.UserReviewDTO;
 import finalproject.airbnb.model.pojo.Review;
+import finalproject.airbnb.model.pojo.Stay;
 import finalproject.airbnb.model.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -42,10 +43,13 @@ public class ReviewDAO {
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private UserDAO userDAO;
+    @Autowired
+    private StayDAO stayDAO;
 
     public Review addReview(Review review) throws SQLException {
         Connection connection = jdbcTemplate.getDataSource().getConnection();
         try ( PreparedStatement statement = connection.prepareStatement(ADD_REVIEW_SQL, Statement.RETURN_GENERATED_KEYS)) {
+            connection.setAutoCommit(false);
             statement.setLong(1, review.getUser().getId());
             statement.setLong(2, review.getStayId());
             statement.setString(3, review.getComment());
@@ -59,13 +63,21 @@ public class ReviewDAO {
             ResultSet result = statement.getGeneratedKeys();
             result.next();
             review.setId(result.getLong(1));
+            //update stay rating
+            connection.commit();
             return review;
+        } catch (SQLException e) {
+            connection.rollback();
+            throw e;
+        } finally {
+            connection.setAutoCommit(true);
+            connection.close();
         }
     }
 
     public String deleteReview(long id) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(DELETE_REVIEW_SQL)) {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE_REVIEW_SQL)) {
             statement.setLong(1, id);
             statement.executeUpdate();
         }
@@ -73,8 +85,8 @@ public class ReviewDAO {
     }
 
     public Review getReviewByStayIdAndUser(long stayId, User user) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try ( PreparedStatement statement = connection.prepareStatement(GET_REVIEW_BY_USER_ID_AND_STAY_ID)) {
+        try ( Connection connection = jdbcTemplate.getDataSource().getConnection();
+              PreparedStatement statement = connection.prepareStatement(GET_REVIEW_BY_USER_ID_AND_STAY_ID)) {
             statement.setLong(1, user.getId());
             statement.setLong(2, stayId);
             ResultSet result = statement.executeQuery();
@@ -95,8 +107,8 @@ public class ReviewDAO {
     }
 
     public Review getReviewById(long id) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try ( PreparedStatement statement = connection.prepareStatement(GET_REVIEW_BY_ID_SQL)) {
+        try ( Connection connection = jdbcTemplate.getDataSource().getConnection();
+              PreparedStatement statement = connection.prepareStatement(GET_REVIEW_BY_ID_SQL)) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             if(result.next()) {
@@ -116,8 +128,8 @@ public class ReviewDAO {
     }
 
     public List<Review> getReviewsByStayId(long stayId) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(GET_REVIEW_BY_STAY_ID_SQL)) {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_REVIEW_BY_STAY_ID_SQL)) {
             statement.setLong(1, stayId);
             ResultSet result = statement.executeQuery();
             List<Review> reviews = new ArrayList<>();
@@ -139,8 +151,8 @@ public class ReviewDAO {
     }
 
     public List<Review> getReviewsByUserId(long userId) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(GET_REVIEWS_BY_USER_ID_SQL)) {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_REVIEWS_BY_USER_ID_SQL)) {
             statement.setLong(1, userId);
             ResultSet result = statement.executeQuery();
             List<Review> reviews = new ArrayList<>();
