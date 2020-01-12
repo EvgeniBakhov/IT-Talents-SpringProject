@@ -44,17 +44,17 @@ public class BookingController extends AbstractController{
         bookingDAO.addBooking(booking);
         return booking;
     }
-    @DeleteMapping("/bookings/{id}")
+    @DeleteMapping("bookings/{id}")
     public String deleteBooking(@PathVariable long id, HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
-        if(user==null){
+        if(user == null) {
             throw new AuthorizationException();
         }
         Booking booking = bookingDAO.getBookingById(id);
-        if(booking == null){
+        if(booking == null) {
             throw new NotFoundException("Booking not found.");
         }
-        if(user.getId()!=booking.getUserId()){
+        if(user.getId() != booking.getUserId()) {
             throw new AuthorizationException("You have no permissions to delete this booking");
         }
         return bookingDAO.deleteBooking(id);

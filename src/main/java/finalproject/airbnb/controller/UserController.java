@@ -148,11 +148,10 @@ public class UserController extends AbstractController{
         if(user==null){
             throw new AuthorizationException();
         }
-        if(user.getId()!=id){
+        if(user.getId() != id){
             throw new AuthorizationException("You have no permissions to see bookings of this user.");
         }
-        List<Booking> allBookings;
-        allBookings = bookingDAO.getAllBookingsByUserId(user.getId());
+        List<Booking> allBookings = bookingDAO.getAllBookingsByUserId(id);
         if(allBookings == null){
             throw new NotFoundException("You haven't any bookings yet.");
         }

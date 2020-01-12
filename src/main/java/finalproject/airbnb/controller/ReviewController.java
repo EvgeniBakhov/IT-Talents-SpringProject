@@ -5,20 +5,15 @@ import finalproject.airbnb.exceptions.BadRequestException;
 import finalproject.airbnb.exceptions.NotFoundException;
 import finalproject.airbnb.model.dao.ReviewDAO;
 import finalproject.airbnb.model.dao.StayDAO;
-import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.ReviewDTO;
 import finalproject.airbnb.model.dto.UserReviewDTO;
-import finalproject.airbnb.model.dto.UserWithoutPassDTO;
 import finalproject.airbnb.model.pojo.Review;
-import finalproject.airbnb.model.pojo.Stay;
 import finalproject.airbnb.model.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
-import java.util.List;
-
 @RestController
 public class ReviewController extends AbstractController {
 
