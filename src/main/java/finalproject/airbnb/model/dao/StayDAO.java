@@ -16,23 +16,13 @@ import java.util.List;
 
 @Component
 public class StayDAO {
-
+    @Autowired
+    UserDAO userDAO;
     private static final String ADD_STAY_SQL = "INSERT INTO stays (host_id, location_id, price, stay_description, title, type_id, " +
             "instant_book, property_type_id, rules, num_of_beds, num_of_bedrooms, num_of_bathrooms)" +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_STAY_SQL = "DELETE FROM stays WHERE id = ?;";
-    private static final String GET_STAY_BY_ID_SQL = "SELECT u.first_name, u.last_name, u.profile_picture," +
-            " l.street_address, l.city, c.country_name," +
-            " s.price, s.rating, s.stay_description, s.title," +
-            " p.type_name, s.instant_book, pr.property_type_name," +
-            " s.rules, s.num_of_beds, s.num_of_bedrooms, s.num_of_bathrooms " +
-            " FROM stays AS s" +
-            " JOIN users AS u ON (s.host_id = u.id)" +
-            " JOIN locations AS l ON (s.location_id = l.id)" +
-            " JOIN countries AS c ON (l.country_id = c.id)" +
-            " JOIN place_types AS p ON(s.type_id = p.id) " +
-            " JOIN property_types AS pr ON(s.property_type_id = pr.id)" +
-            " WHERE s.id = ?";
+    private static final String GET_STAY_BY_ID_SQL = "SELECT id, price, rating, stay_description, title, type_id, property_type_id, host_id, location_id, instant_book, rules, num_of_beds, num_of_bedrooms, num_of_bathrooms FROM stays WHERE id = ?";
     private static final String GET_STAYS_BY_USER_ID = "SELECT u.first_name, u.last_name, u.profile_picture," +
             " l.street_address, l.city, c.country_name," +
             " s.price, s.rating, s.stay_description, s.title," +
@@ -45,7 +35,7 @@ public class StayDAO {
             " JOIN place_types AS p ON(s.type_id = p.id) " +
             " JOIN property_types AS pr ON(s.property_type_id = pr.id)" +
             " WHERE s.host_id = ?";
-    public static final String GET_STAY_SQL = "";
+
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -94,13 +84,28 @@ public class StayDAO {
         return "Stay deleted!";
     }
 
-    public GetStayDTO getStayById(long id) throws SQLException {
+    public Stay getStayById(long id) throws SQLException {
         Connection connection = jdbcTemplate.getDataSource().getConnection();
         try(PreparedStatement statement = connection.prepareStatement(GET_STAY_BY_ID_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             if(result.next()) {
-                return new GetStayDTO(result);
+                return new Stay(
+                        result.getLong("id"),
+                        result.getDouble("price"),
+                        result.getDouble("rating"),
+                        result.getString("stay_description"),
+                        result.getString("title"),
+                        result.getBoolean("instant_book"),
+                        userDAO.getUserById(result.getLong("host_id")),
+                        locDAO.getLocationById(result.getLong("location_id")),
+                        result.getString("rules"),
+                        result.getInt("num_of_beds"),
+                        result.getInt("num_of_bedrooms"),
+                        result.getInt("num_of_bathrooms"),
+                        getStayTypeById(result.getLong("type_id")),
+                        getPropertyTypeById(result.getLong("property_type_id"))
+                );
             }
             else{
                 return null;
@@ -151,7 +156,25 @@ public class StayDAO {
             return user;
         }
     }*/
+    public Stay.stayType getStayTypeById(long id) throws SQLException {
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try(PreparedStatement statement = connection.prepareStatement("SELECT type_name FROM place_types WHERE id = ?")){
+            statement.setLong(1, id);
+            ResultSet result = statement.executeQuery();
+            result.next();
+            return Stay.stayType.valueOf(result.getString("type_name"));
+        }
+    }
 
+    public Stay.propertyType getPropertyTypeById(long id) throws SQLException {
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try(PreparedStatement statement = connection.prepareStatement("SELECT property_type_name FROM property_types WHERE id = ?")){
+            statement.setLong(1, id);
+            ResultSet result = statement.executeQuery();
+            result.next();
+            return Stay.propertyType.valueOf(result.getString("property_type_name"));
+        }
+    }
 
 
 }

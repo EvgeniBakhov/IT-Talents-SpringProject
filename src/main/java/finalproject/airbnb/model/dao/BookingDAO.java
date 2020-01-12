@@ -9,7 +9,6 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeSet;
 
 @Component
 public class BookingDAO {
@@ -21,6 +20,8 @@ public class BookingDAO {
     private static final String GET_ALL_BOOKINGS_BY_USER_ID = "SELECT id, stay_id, user_id, from_date, to_date, accepted, valid FROM bookings WHERE user_id = ? ORDER BY from_date";
     private static final String DELETE_BOOKING = "DELETE FROM bookings WHERE id = ?;";
     public static final String GET_BOOKING_BY_ID = "SELECT id, stay_id, user_id, from_date, to_date, accepted, valid FROM bookings WHERE id = ?";
+    private static final String GET_UNACCEPTED_BOOKINGS_SQL = "SELECT id, stay_id, user_id, from_date, to_date, accepted, valid FROM bookings WHERE stay_id = ? AND accepted = 0 ORDER BY from_date;";
+
     @Autowired
     JdbcTemplate jdbcTemplate;
     public Booking addBooking(Booking booking) throws SQLException {
@@ -133,4 +134,36 @@ public class BookingDAO {
             return "Booking deleted.";
         }
     }
+
+    public List<Booking> getUnacceptedBookingByStayId(long id) throws SQLException {
+        ResultSet result;
+        List<Booking> bookings = new ArrayList<>();
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try(PreparedStatement statement = connection.prepareStatement(GET_UNACCEPTED_BOOKINGS_SQL)) {
+            statement.setLong(1, id);
+            result = statement.executeQuery();
+            while (result.next()) {
+                bookings.add(new Booking(
+                        result.getLong("id"),
+                        result.getLong("stay_id"),
+                        result.getLong("user_id"),
+                        result.getDate("from_date").toLocalDate(),
+                        result.getDate("to_date").toLocalDate(),
+                        result.getBoolean("accepted"),
+                        result.getBoolean("valid")
+                ));
+            }
+        }
+        return bookings;
+    }
+
+    public String acceptBooking(Booking booking) throws SQLException {
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try(PreparedStatement statement = connection.prepareStatement("UPDATE bookings SET accepted = 1 WHERE id = ?")){
+            statement.setLong(1, booking.getId());
+            statement.executeUpdate();
+        }
+        return "Booking accepted.";
+    }
+
 }

@@ -70,7 +70,7 @@ public class UserController extends AbstractController{
 
     @PostMapping("/login")
     public UserWithoutPassDTO loginUser(@RequestBody LoginUserDTO loginUserDTO, HttpSession session) throws SQLException {
-        UserWithoutPassDTO loggedUser = null;
+        UserWithoutPassDTO loggedUser;
         User user = userDAO.getUserByEmail(loginUserDTO.getEmail());
         if(user == null){
             throw new AuthorizationException("Wrong credentials.");
@@ -157,4 +157,6 @@ public class UserController extends AbstractController{
         }
         return allBookings;
     }
+
+
 }
