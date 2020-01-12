@@ -81,7 +81,7 @@ public class ReviewController extends AbstractController {
         Stay stay = stayDAO.getStayById(review.getStayId());
         double currentStayRating = stay.getRating();
         int numberOfStayReviews = reviewDAO.getReviewsByStayId(stay.getId()).size();
-        double avgReviewRating = (double)(review.getCleanlinessRating() + review.getAccuracyRating() +
+        double avgReviewRating = (review.getCleanlinessRating() + review.getAccuracyRating() +
                 review.getCommunicationRating() + review.getCheckInRating() +
                 review.getLocationRating() + review.getValueRating()) / RATING_TYPES_COUNT;
         double updatedRating = ((numberOfStayReviews * currentStayRating) + avgReviewRating ) / (numberOfStayReviews + 1);

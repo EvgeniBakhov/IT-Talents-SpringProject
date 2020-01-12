@@ -63,7 +63,6 @@ public class ReviewDAO {
             ResultSet result = statement.getGeneratedKeys();
             result.next();
             review.setId(result.getLong(1));
-            //update stay rating
             connection.commit();
             return review;
         } catch (SQLException e) {

@@ -14,6 +14,7 @@ import finalproject.airbnb.model.pojo.User;
 import finalproject.airbnb.model.dao.UserDAO;
 import finalproject.airbnb.utilities.LocationValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
 import finalproject.airbnb.utilities.UserValidator;
 
@@ -65,6 +66,8 @@ public class UserController extends AbstractController{
         if(!locationValidator.isValidLocation(user.getLocation())){
             throw new BadRequestException("Invalid address or city or country name.");
         }
+        String password = BCrypt.hashpw(registerUserDTO.getPassword(),BCrypt.gensalt());
+        user.setPassword(password);
         userDAO.addUser(user);
         session.setAttribute(SESSION_KEY_LOGGED_USER, user);
         UserWithoutPassDTO registeredUser = new UserWithoutPassDTO(user);
@@ -78,7 +81,7 @@ public class UserController extends AbstractController{
         if(user == null){
             throw new AuthorizationException("Wrong credentials.");
         }else{
-            if(user.getPassword().equals(loginUserDTO.getPassword())){
+            if(BCrypt.checkpw(loginUserDTO.getPassword(), user.getPassword())){
                 //You're logged!
                 session.setAttribute(SESSION_KEY_LOGGED_USER, user);
                 loggedUser = new UserWithoutPassDTO(user);
