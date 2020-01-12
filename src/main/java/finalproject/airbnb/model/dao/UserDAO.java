@@ -4,6 +4,7 @@ import finalproject.airbnb.model.dto.UserWithoutPassDTO;
 import finalproject.airbnb.model.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;

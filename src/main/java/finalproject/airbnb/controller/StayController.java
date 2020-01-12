@@ -9,6 +9,7 @@ import finalproject.airbnb.model.dao.BookingDAO;
 import finalproject.airbnb.model.dao.StayDAO;
 import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.StayDTO;
+import finalproject.airbnb.model.dto.StayFilterDTO;
 import finalproject.airbnb.model.pojo.Review;
 import finalproject.airbnb.model.pojo.Booking;
 import finalproject.airbnb.model.pojo.Stay;
@@ -42,7 +43,7 @@ public class StayController extends AbstractController {
     private ReviewDAO reviewDAO;
 
     @PostMapping("/stays")
-    public Stay addStay(@RequestBody StayDTO stayDTO, HttpSession session) throws SQLException {
+    public GetStayDTO addStay(@RequestBody StayDTO stayDTO, HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
         if(user == null) {
             throw new AuthorizationException();
@@ -64,7 +65,7 @@ public class StayController extends AbstractController {
             throw new BadRequestException("Number must be between 1 and 50!");
         }
         stayDAO.addStay(stay);
-        return stay;
+        return new GetStayDTO(stay);
     }
 
     @GetMapping("/stays/{id}")
@@ -191,4 +192,25 @@ public class StayController extends AbstractController {
         }
         return images;
     }
+
+    @PostMapping("stays/filters")
+    public List<GetStayDTO> getStaysByFilters(@RequestBody StayFilterDTO stayFilterDTO) throws SQLException {
+        double minPrice = stayFilterDTO.getMinPrice();
+        double maxPrice = stayFilterDTO.getMaxPrice();
+        int numOfBeds = stayFilterDTO.getNumOfBeds();
+        int numOfBedrooms = stayFilterDTO.getNumOfBedrooms();
+        int numOfBathrooms = stayFilterDTO.getNumOfBathrooms();
+        String stayType = stayFilterDTO.getStayType();
+        String propertyType = stayFilterDTO.getPropertyType();
+        String order = stayFilterDTO.getOrder();
+        if(minPrice == 0 && maxPrice == 0 && numOfBeds == 0 && numOfBathrooms == 0
+        && numOfBedrooms == 0 && stayType == null && propertyType == null) {
+            throw new BadRequestException("No filter selected");
+        }
+        if(minPrice > maxPrice) {
+            throw new BadRequestException("Incorrect data");
+        }
+        return stayDAO.filterStays(stayFilterDTO);
+    }
+
 }
