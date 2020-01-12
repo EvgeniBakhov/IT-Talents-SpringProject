@@ -77,6 +77,19 @@ public class StayController extends AbstractController {
         return getStayDTO;
     }
 
+    @PostMapping("/stays/{id}")
+    public StayDTO editStay(@PathVariable long id, @RequestBody StayDTO stayDTO, HttpSession session) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null){
+            throw new AuthorizationException();
+        }
+        if(user.getId()!=id){
+            throw new AuthorizationException("You must be a host to edit this stay.");
+        }
+        return stayDAO.editStay(stayDTO);
+    }
+
+
     @DeleteMapping("/stays/{id}")
     public String deleteStay(@PathVariable long id, HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);

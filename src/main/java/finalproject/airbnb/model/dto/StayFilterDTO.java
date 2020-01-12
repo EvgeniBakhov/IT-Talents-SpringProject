@@ -19,5 +19,6 @@ public class StayFilterDTO {
     private String stayType;
     private String propertyType;
     private String order;
-
+    private String city;
+    private String country;
 }

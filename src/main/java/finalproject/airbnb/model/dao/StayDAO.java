@@ -1,7 +1,9 @@
 package finalproject.airbnb.model.dao;
 
 import finalproject.airbnb.model.dto.GetStayDTO;
+import finalproject.airbnb.model.dto.StayDTO;
 import finalproject.airbnb.model.dto.StayFilterDTO;
+import finalproject.airbnb.model.pojo.Location;
 import finalproject.airbnb.model.pojo.Stay;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,8 +22,6 @@ public class StayDAO {
     public static final String GET_STAY_TYPE_BY_ID = "SELECT type_name FROM place_types WHERE id = ?";
     private static final String ADD_PICTURE_SQL = "INSERT INTO pictures (stay_id, picture_url) VALUES(?, ?);";
     private static final String GET_STAY_PICTURES_URL = "SELECT picture_url FROM pictures WHERE stay_id = ?";
-    @Autowired
-    UserDAO userDAO;
     private static final String ADD_STAY_SQL = "INSERT INTO stays (host_id, location_id, price, stay_description, title, type_id, " +
             "instant_book, property_type_id, rules, num_of_beds, num_of_bedrooms, num_of_bathrooms)" +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -142,25 +142,22 @@ public class StayDAO {
         }
     }
 
-    /*public StayDTO editStay(StayDTO stayDTO) throws SQLException {
-        Connection connection = jdbcTemplate.getDataSource().getConnection();
-        Location location =
-        locDAO.editLocation(location);
-        String sql = "UPDATE stays SET price = ?, stay_description = ?, " +
-                "title = ?, birthday = ?, phone_number = ?, user_description = ?, profile_picture = ?, password = ? WHERE id = ?;";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, user.getFirstName());
-            statement.setString(2, user.getLastName());
-            statement.setString(3, user.getEmail());
-            statement.setDate(4, Date.valueOf(user.getBirthday()));
-            statement.setString(5, user.getPhoneNumber());
-            statement.setString(6, user.getUserDescription());
-            statement.setString(7, user.getProfilePicture());
-            statement.setString(8, user.getPassword());
-            statement.setLong(9, user.getId());
-            return user;
+    public StayDTO editStay(StayDTO stayDTO) throws SQLException {
+        try(Connection connection = jdbcTemplate.getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE stays SET price, stay_description, title, instant_book, rules, num_of_beds, num_of_bedrooms, num_of_bathrooms VALUES(?, ?, ?, ?, ?, ?, ?, ?)")){
+            Location location = new Location(stayDTO.getStreetAddress(), stayDTO.getCity(), stayDTO.getCountry());
+            locDAO.editLocation(location);
+            statement.setDouble(1, stayDTO.getPrice());
+            statement.setString(2, stayDTO.getDescription());
+            statement.setString(3, stayDTO.getTitle());
+            statement.setBoolean(4, stayDTO.isInstantBook());
+            statement.setString(5, stayDTO.getRules());
+            statement.setInt(6, stayDTO.getNumOfBeds());
+            statement.setInt(7, stayDTO.getNumOfBedrooms());
+            statement.setInt(8, stayDTO.getNumOfBathrooms());
+            statement.executeUpdate();
         }
-    }*/
+        return stayDTO;
+    }
     public Stay.stayType getStayTypeById(long id) throws SQLException {
         try(Connection connection = jdbcTemplate.getDataSource().getConnection();
             PreparedStatement statement = connection.prepareStatement(GET_STAY_TYPE_BY_ID)){
@@ -225,23 +222,35 @@ public class StayDAO {
         String stayType = stayFilterDTO.getStayType();
         String propertyType = stayFilterDTO.getPropertyType();
         String order = stayFilterDTO.getOrder();
+        String city = stayFilterDTO.getCity();
+        String country = stayFilterDTO.getCountry();
         if(minPrice != 0 && maxPrice != 0) {
-            sql.append(" s.price BETWEEN " + minPrice + " AND " + maxPrice);
+            sql.append(" s.price BETWEEN " + minPrice + " AND " + maxPrice + "AND");
+        }
+        if(country!=null){
+            if(!country.isEmpty()) {
+                sql.append(" c.country_name = " + country + "AND");
+            }
+        }
+        if(city!=null){
+            if(!city.isEmpty()){
+                sql.append(" l.city = " + city + "AND");
+            }
         }
         if(numOfBathrooms != 0) {
-            sql.append(" AND s.num_of_bathrooms = " + numOfBathrooms);
+            sql.append(" s.num_of_bathrooms = " + numOfBathrooms + "AND");
         }
         if(numOfBedrooms != 0) {
-            sql.append(" AND s.num_of_bedrooms = " + numOfBedrooms);
+            sql.append(" s.num_of_bedrooms = " + numOfBedrooms + "AND");
         }
         if(numOfBeds != 0) {
-            sql.append(" AND s.num_of_beds = " + numOfBeds);
+            sql.append(" s.num_of_beds = " + numOfBeds + "AND");
         }
         if(stayType != null) {
-            sql.append(" AND s.type_id = " + Stay.stayType.valueOf(stayType).getTypeId());
+            sql.append(" s.type_id = " + Stay.stayType.valueOf(stayType).getTypeId() + "AND");
         }
         if(propertyType != null) {
-            sql.append(" AND s.property_type_id = " + Stay.propertyType.valueOf(propertyType).getPropertyTypeId());
+            sql.append(" s.property_type_id = " + Stay.propertyType.valueOf(propertyType).getPropertyTypeId());
         }
         if(order != null) {
             if(order.equalsIgnoreCase("ascending")) {
