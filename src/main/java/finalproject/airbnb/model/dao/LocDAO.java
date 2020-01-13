@@ -71,9 +71,13 @@ public class LocDAO {
     public Location editLocation (Location location) throws SQLException {
         try (Connection connection = jdbcTemplate.getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(EDIT_LOCATION_SQL)) {
+            long countryID = getCountryId(location.getCountry());
+            if(countryID == -1) {
+                countryID = addCountry(location.getCountry());
+            }
             statement.setString(1, location.getAddress());
             statement.setString(2, location.getCity());
-            statement.setLong(3, getCountryId(location.getCountry()));
+            statement.setLong(3, countryID);
             statement.setLong(4, location.getId());
             statement.executeUpdate();
             return location;

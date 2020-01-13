@@ -143,8 +143,10 @@ public class StayDAO {
     }
 
     public StayDTO editStay(StayDTO stayDTO) throws SQLException {
-        try(Connection connection = jdbcTemplate.getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement("UPDATE stays SET price, stay_description, title, instant_book, rules, num_of_beds, num_of_bedrooms, num_of_bathrooms VALUES(?, ?, ?, ?, ?, ?, ?, ?)")){
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try( PreparedStatement statement = connection.prepareStatement("UPDATE stays SET price, stay_description, title, instant_book, rules, num_of_beds, num_of_bedrooms, num_of_bathrooms VALUES(?, ?, ?, ?, ?, ?, ?, ?)")){
             Location location = new Location(stayDTO.getStreetAddress(), stayDTO.getCity(), stayDTO.getCountry());
+            connection.setAutoCommit(false);
             locDAO.editLocation(location);
             statement.setDouble(1, stayDTO.getPrice());
             statement.setString(2, stayDTO.getDescription());
@@ -155,8 +157,17 @@ public class StayDAO {
             statement.setInt(7, stayDTO.getNumOfBedrooms());
             statement.setInt(8, stayDTO.getNumOfBathrooms());
             statement.executeUpdate();
+            connection.commit();
+            return stayDTO;
         }
-        return stayDTO;
+        catch (SQLException e) {
+            connection.rollback();
+            throw e;
+        }
+        finally {
+            connection.setAutoCommit(true);
+            connection.close();
+        }
     }
     public Stay.stayType getStayTypeById(long id) throws SQLException {
         try(Connection connection = jdbcTemplate.getDataSource().getConnection();
@@ -225,29 +236,29 @@ public class StayDAO {
         String city = stayFilterDTO.getCity();
         String country = stayFilterDTO.getCountry();
         if(minPrice != 0 && maxPrice != 0) {
-            sql.append(" s.price BETWEEN " + minPrice + " AND " + maxPrice + "AND");
+            sql.append(" s.price BETWEEN " + minPrice + " AND " + maxPrice + " AND ");
         }
         if(country!=null){
             if(!country.isEmpty()) {
-                sql.append(" c.country_name = " + country + "AND");
+                sql.append(" c.country_name = " + country + " AND ");
             }
         }
         if(city!=null){
             if(!city.isEmpty()){
-                sql.append(" l.city = " + city + "AND");
+                sql.append(" l.city = " + city + " AND ");
             }
         }
         if(numOfBathrooms != 0) {
-            sql.append(" s.num_of_bathrooms = " + numOfBathrooms + "AND");
+            sql.append(" s.num_of_bathrooms = " + numOfBathrooms + " AND ");
         }
         if(numOfBedrooms != 0) {
-            sql.append(" s.num_of_bedrooms = " + numOfBedrooms + "AND");
+            sql.append(" s.num_of_bedrooms = " + numOfBedrooms + " AND ");
         }
         if(numOfBeds != 0) {
-            sql.append(" s.num_of_beds = " + numOfBeds + "AND");
+            sql.append(" s.num_of_beds = " + numOfBeds + " AND ");
         }
         if(stayType != null) {
-            sql.append(" s.type_id = " + Stay.stayType.valueOf(stayType).getTypeId() + "AND");
+            sql.append(" s.type_id = " + Stay.stayType.valueOf(stayType).getTypeId() + " AND ");
         }
         if(propertyType != null) {
             sql.append(" s.property_type_id = " + Stay.propertyType.valueOf(propertyType).getPropertyTypeId());
