@@ -4,6 +4,7 @@ import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.StayDTO;
 import finalproject.airbnb.model.dto.StayFilterDTO;
 import finalproject.airbnb.model.pojo.Location;
+import finalproject.airbnb.model.pojo.Picture;
 import finalproject.airbnb.model.pojo.Stay;
 import finalproject.airbnb.utilities.StayValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,8 @@ public class StayDAO {
             " JOIN stay_types AS st ON(s.stay_type_id = st.id) " +
             " JOIN property_types AS pr ON(s.property_type_id = pr.id)" +
             " WHERE s.host_id = ?";
+    private static final String DELETE_PICTURE_SQL = "DELETE FROM pictures WHERE id = ?";
+    private static final String GET_PICTURE_BY_ID = "SELECT id, stay_id, picture_url FROM pictures WHERE id = ?";
 
 
     @Autowired
@@ -376,5 +379,26 @@ public class StayDAO {
             }
         }
         return imagePaths;
+    }
+
+    public Picture getPictureById(long picId) throws SQLException {
+        ResultSet result;
+        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
+            PreparedStatement statement = connection.prepareStatement(GET_PICTURE_BY_ID)){
+            statement.setLong(1, picId);
+            result = statement.executeQuery();
+            result.next();
+            return new Picture(result.getLong("id"),
+                    result.getLong("stay_id"),
+                    result.getString("picture_url"));
+        }
+    }
+
+    public void deletePicture(long picId) throws SQLException {
+        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
+            PreparedStatement statement = connection.prepareStatement(DELETE_PICTURE_SQL)){
+            statement.setLong(1, picId);
+            statement.executeUpdate();
+        }
     }
 }

@@ -10,10 +10,7 @@ import finalproject.airbnb.model.dao.StayDAO;
 import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.StayDTO;
 import finalproject.airbnb.model.dto.StayFilterDTO;
-import finalproject.airbnb.model.pojo.Review;
-import finalproject.airbnb.model.pojo.Booking;
-import finalproject.airbnb.model.pojo.Stay;
-import finalproject.airbnb.model.pojo.User;
+import finalproject.airbnb.model.pojo.*;
 import finalproject.airbnb.utilities.LocationValidator;
 import finalproject.airbnb.utilities.StayValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +85,21 @@ public class StayController extends AbstractController {
         }
         if(user.getId() != stayDAO.getHostId(id)){
             throw new AuthorizationException("You must be a host to edit this stay.");
+        }
+        Location location = new Location(stayDTO.getStreetAddress(), stayDTO.getCity(), stayDTO.getCountry());
+        if(!locationValidator.isValidLocation(location)){
+            throw new BadRequestException("Invalid location!");
+        }
+        if(!stayValidator.isValidPrice(stayDTO.getPrice())) {
+            throw new BadRequestException("Invalid price!");
+        }
+        if(!stayValidator.isValidTitle(stayDTO.getTitle())) {
+            throw new BadRequestException("Invalid title!");
+        }
+        if(!stayValidator.isValidNumOfBathrooms(stayDTO.getNumOfBathrooms()) ||
+                !stayValidator.isValidNumOfBeds(stayDTO.getNumOfBeds()) ||
+                !stayValidator.isValidNumOfBedrooms(stayDTO.getNumOfBedrooms())) {
+            throw new BadRequestException("Number must be between 1 and 50!");
         }
         return stayDAO.editStay(id, stayDTO);
     }
@@ -208,6 +220,26 @@ public class StayController extends AbstractController {
             throw new NotFoundException("Stay doesn't have images");
         }
         return images;
+    }
+
+    @DeleteMapping("picture/{picId}")
+    public String deletePicture(HttpSession session, @PathVariable long picId) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null){
+            throw new AuthorizationException();
+        }
+        Picture picture = stayDAO.getPictureById(picId);
+        if(picture == null){
+            throw new NotFoundException("Picture not found.");
+        }
+        long stayId = stayDAO.getStayById(picture.getStayId()).getId();
+        if(user.getId() != stayDAO.getHostId(stayId)){
+            throw new AuthorizationException("You have no permissions to delete this image.");
+        }
+        File file = new File (UPLOAD_FOLDER + picture.getPictureUrl());
+        file.delete();
+        stayDAO.deletePicture(picId);
+        return "Picture deleted.";
     }
 
     @PostMapping("stays/filters")

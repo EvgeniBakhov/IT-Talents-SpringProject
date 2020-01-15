@@ -137,7 +137,25 @@ public class UserController extends AbstractController{
             throw new AuthorizationException("You must log in.");
         }
         if(user.getId()!=id){
-            throw new AuthorizationException("You don't have permissions to delete edit this user.");
+            throw new AuthorizationException("You don't have permissions to edit this user.");
+        }
+        if(!userValidator.isValidName(user.getFirstName()) || !userValidator.isValidName(user.getLastName())){
+            throw new BadRequestException("Your first name and your last name must contain from 2 to 30 symbols.");
+        }
+        if(!userValidator.isValidEmail(user.getEmail())){
+            throw new BadRequestException("Email is not valid.");
+        }
+        if(!userValidator.isValidPassword(user.getPassword())){
+            throw new BadRequestException("Your password must contain at least 8 characters, at least 1 uppercase letter and number.");
+        }
+        if(!userValidator.isValidBirthday(user.getBirthday())){
+            throw new BadRequestException("You must be at least 18 years old.");
+        }
+        if(!userValidator.isValidPhoneNumber(user.getPhoneNumber())){
+            throw new BadRequestException("Your number must contain from 11 to 15 characters and start with '+'");
+        }
+        if(!locationValidator.isValidLocation(user.getLocation())){
+            throw new BadRequestException("Invalid address or city or country name.");
         }
         return userDAO.editUser(user);
     }
@@ -187,11 +205,13 @@ public class UserController extends AbstractController{
         return "Photo added.";
     }
     @DeleteMapping
-    public String deletePicture(HttpSession session){
+    public String deletePicture(HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(SESSION_KEY_LOGGED_USER);
         if(user == null){
             throw new AuthorizationException();
         }
+        File file = new File(USER_UPLOAD_FOLDER+user.getProfilePicture());
+        file.delete();
         userDAO.deletePicture(user.getId());
         return  "Profile picture deleted.";
     }
