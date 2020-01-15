@@ -25,6 +25,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -32,6 +33,7 @@ import java.util.List;
 public class UserController extends AbstractController{
 
     public static final String SESSION_KEY_LOGGED_USER = "logged_user";
+    public static final String USER_UPLOAD_FOLDER = "C:\\Users\\virgi\\IdeaProjects\\IT-Talents-SpringProject\\src\\main\\resources\\UserProfilePictures\\";
 
     @Autowired
     private UserDAO userDAO;
@@ -174,13 +176,23 @@ public class UserController extends AbstractController{
         if(user == null){
             throw new AuthorizationException();
         }
-        if(file==null){
+        if(file == null){
             throw new BadRequestException("Cannot upload the file.");
         }
-        String uploadFolder = "C:\\Users\\ostne\\IdeaProjects\\airbnb-spring\\src\\main\\resources\\static\\profilePictures\\";
-        File localFile  = new File (uploadFolder + file.getOriginalFilename());
+        String fileName = LocalDateTime.now().toString() + "_" + user.getId() + "_" + file.getOriginalFilename();
+        fileName = fileName.replace(':', '-');
+        File localFile  = new File (USER_UPLOAD_FOLDER + fileName);
         Files.copy(file.getInputStream(), localFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        userDAO.addPicture(localFile.toPath().toString(), user.getId());
+        userDAO.addPicture(fileName, user.getId());
         return "Photo added.";
+    }
+    @DeleteMapping
+    public String deletePicture(HttpSession session){
+        User user = (User) session.getAttribute(SESSION_KEY_LOGGED_USER);
+        if(user == null){
+            throw new AuthorizationException();
+        }
+        userDAO.deletePicture(user.getId());
+        return  "Profile picture deleted.";
     }
 }

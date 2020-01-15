@@ -6,6 +6,7 @@ import finalproject.airbnb.exceptions.NotFoundException;
 import finalproject.airbnb.model.dao.BookingDAO;
 import finalproject.airbnb.model.dao.StayDAO;
 import finalproject.airbnb.model.dto.BookingDTO;
+import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.pojo.Booking;
 import finalproject.airbnb.model.pojo.Stay;
 import finalproject.airbnb.model.pojo.User;
@@ -29,11 +30,11 @@ public class BookingController extends AbstractController{
     @PostMapping("/stays/{id}/booking")
     public Booking addBooking(@RequestBody BookingDTO bookingDTO, @PathVariable long id, HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
-        Stay stay = stayDAO.getStayById(id);
+        GetStayDTO getStayDTO = stayDAO.getStayById(id);
         if(user==null){
             throw new AuthorizationException();
         }
-        if(stay==null){
+        if(getStayDTO == null){
             throw new NotFoundException("Not found stay with this id");
         }
         Booking booking = new Booking(bookingDTO, user.getId(), id);
@@ -43,7 +44,7 @@ public class BookingController extends AbstractController{
         if(bookingDAO.getBookingsBetweenDates(id, booking.getFromDate(), booking.getToDate())){
             throw new BadRequestException("Sorry, stay is already booked for this date.");
         }
-        if(stay.isInstantBook()){
+        if(getStayDTO.isInstantBook()){
             booking.setAccepted(true);
         }
         bookingDAO.addBooking(booking);

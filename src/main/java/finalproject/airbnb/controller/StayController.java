@@ -26,10 +26,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 public class StayController extends AbstractController {
+
+    public static final String UPLOAD_FOLDER = "C:\\Users\\virgi\\IdeaProjects\\IT-Talents-SpringProject\\src\\main\\resources\\StayPictures";
 
     @Autowired
     private StayDAO stayDAO;
@@ -64,29 +67,29 @@ public class StayController extends AbstractController {
             !stayValidator.isValidNumOfBedrooms(stay.getNumOfBedrooms())) {
             throw new BadRequestException("Number must be between 1 and 50!");
         }
-        stayDAO.addStay(stay);
-        return new GetStayDTO(stay);
+        long stayId = stayDAO.addStay(stay);
+        return stayDAO.getStayById(stayId);
     }
 
     @GetMapping("/stays/{id}")
     public GetStayDTO getStay(@PathVariable long id) throws SQLException {
-        GetStayDTO getStayDTO = new GetStayDTO(stayDAO.getStayById(id));
+        GetStayDTO getStayDTO = stayDAO.getStayById(id);
         if(getStayDTO == null) {
             throw new NotFoundException("Stay not found");
         }
         return getStayDTO;
     }
 
-    @PostMapping("/stays/{id}")
+    @PutMapping("/stays/{id}")
     public StayDTO editStay(@PathVariable long id, @RequestBody StayDTO stayDTO, HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
         if(user == null){
             throw new AuthorizationException();
         }
-        if(user.getId()!=id){
+        if(user.getId() != stayDAO.getHostId(id)){
             throw new AuthorizationException("You must be a host to edit this stay.");
         }
-        return stayDAO.editStay(stayDTO);
+        return stayDAO.editStay(id, stayDTO);
     }
 
 
@@ -171,7 +174,7 @@ public class StayController extends AbstractController {
         if(booking == null) {
             throw new BadRequestException("Booking doesn't exist");
         }
-        if(user.getId() != stayDAO.getStayById(booking.getStayId()).getHost().getId()){
+        if(user.getId() != stayDAO.getHostId(booking.getStayId())){
             throw new AuthorizationException("You have to be host to accept stay's bookings.");
         }
         return bookingDAO.acceptBooking(booking);
@@ -182,16 +185,17 @@ public class StayController extends AbstractController {
         if(user == null){
             throw new AuthorizationException();
         }
-        if(stayDAO.getStayById(id).getHost().getId()!=user.getId()){
+        if(stayDAO.getHostId(id) != user.getId()){
             throw new AuthorizationException("You must be a host to add the image to this stay.");
         }
-        if(file==null){
+        if(file == null){
             throw new BadRequestException("Cannot upload this file");
         }
-        String uploadFolder = "C:\\Users\\ostne\\IdeaProjects\\airbnb-spring\\src\\main\\resources\\static\\profilePictures\\stayPictures\\";
-        File localFile  = new File (uploadFolder + file.getOriginalFilename());
+        String fileName = LocalDateTime.now().toString() + "_" + user.getId() + "_" + file.getOriginalFilename();
+        fileName = fileName.replace(':', '-');
+        File localFile  = new File (UPLOAD_FOLDER + file.getOriginalFilename());
         Files.copy(file.getInputStream(), localFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        stayDAO.addImage(localFile.toPath().toString(), id);
+        stayDAO.addImage(fileName, id);
         return "Photo added.";
     }
     @GetMapping("/stays/{id}/images")
@@ -213,15 +217,17 @@ public class StayController extends AbstractController {
         int numOfBeds = stayFilterDTO.getNumOfBeds();
         int numOfBedrooms = stayFilterDTO.getNumOfBedrooms();
         int numOfBathrooms = stayFilterDTO.getNumOfBathrooms();
-        String stayType = stayFilterDTO.getStayType();
-        String propertyType = stayFilterDTO.getPropertyType();
+        long stayType = stayFilterDTO.getStayTypeId();
+        long propertyType = stayFilterDTO.getPropertyTypeId();
         String order = stayFilterDTO.getOrder();
-        if(minPrice == 0 && maxPrice == 0 && numOfBeds == 0 && numOfBathrooms == 0
-        && numOfBedrooms == 0 && stayType == null && propertyType == null) {
-            throw new BadRequestException("No filter selected");
+        String country = stayFilterDTO.getCountry();
+        String city = stayFilterDTO.getCity();
+        if(minPrice == 0 && maxPrice == 0 && numOfBeds == 0 && numOfBathrooms == 0 && numOfBedrooms == 0
+                && stayType == 0 && propertyType == 0 && order == null && country == null && city == null) {
+            throw new BadRequestException("No filter selected!");
         }
         if(minPrice > maxPrice) {
-            throw new BadRequestException("Incorrect data");
+            throw new BadRequestException("Max price should be larger than min price!");
         }
         return stayDAO.filterStays(stayFilterDTO);
     }

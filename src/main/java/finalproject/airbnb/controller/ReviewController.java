@@ -5,6 +5,7 @@ import finalproject.airbnb.exceptions.BadRequestException;
 import finalproject.airbnb.exceptions.NotFoundException;
 import finalproject.airbnb.model.dao.ReviewDAO;
 import finalproject.airbnb.model.dao.StayDAO;
+import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.ReviewDTO;
 import finalproject.airbnb.model.dto.UserReviewDTO;
 import finalproject.airbnb.model.pojo.Review;
@@ -78,10 +79,10 @@ public class ReviewController extends AbstractController {
     }
 
     private void updateStayRating(Review review) throws SQLException {
-        Stay stay = stayDAO.getStayById(review.getStayId());
+        GetStayDTO stay = stayDAO.getStayById(review.getStayId());
         double currentStayRating = stay.getRating();
         int numberOfStayReviews = reviewDAO.getReviewsByStayId(stay.getId()).size();
-        double avgReviewRating = (review.getCleanlinessRating() + review.getAccuracyRating() +
+        double avgReviewRating = (double)(review.getCleanlinessRating() + review.getAccuracyRating() +
                 review.getCommunicationRating() + review.getCheckInRating() +
                 review.getLocationRating() + review.getValueRating()) / RATING_TYPES_COUNT;
         double updatedRating = ((numberOfStayReviews * currentStayRating) + avgReviewRating ) / (numberOfStayReviews + 1);

@@ -24,6 +24,7 @@ public class UserDAO {
     private static final String EDIT_USER_SQL = "UPDATE users SET first_name = ?, last_name = ?, " +
             "email = ?, birthday = ?, phone_number = ?, user_description = ?, profile_picture = ?, password = ? WHERE id = ?;";
     private static final String ADD_PICTURE_SQL = "UPDATE users SET profile_picture = ? WHERE id = ?";
+    public static final String DELETE_PICTURE_SQL = "UPDATE users SET profile_picture = NULL WHERE id = ?";
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -141,9 +142,18 @@ public class UserDAO {
     }
 
     public void addPicture(String filePath, long id) throws SQLException {
-        try(Connection connection = jdbcTemplate.getDataSource().getConnection(); PreparedStatement statement = connection.prepareStatement(ADD_PICTURE_SQL)){
+        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
+            PreparedStatement statement = connection.prepareStatement(ADD_PICTURE_SQL)){
             statement.setString(1, filePath);
             statement.setLong(2, id);
+            statement.executeUpdate();
+        }
+    }
+
+    public void deletePicture(long id) throws SQLException {
+        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
+            PreparedStatement statement = connection.prepareStatement(DELETE_PICTURE_SQL)){
+            statement.setLong(1, id);
             statement.executeUpdate();
         }
     }

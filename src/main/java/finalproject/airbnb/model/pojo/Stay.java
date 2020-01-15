@@ -56,8 +56,8 @@ public class Stay {
     private int numOfBeds;
     private int numOfBedrooms;
     private int numOfBathrooms;
-    private stayType stayType;
-    private propertyType propertyType;
+    private long stayTypeId;
+    private long propertyTypeId;
 
     public Stay(StayDTO stayDTO) {
         setPrice(stayDTO.getPrice());
@@ -69,8 +69,8 @@ public class Stay {
         setNumOfBeds(stayDTO.getNumOfBeds());
         setNumOfBedrooms(stayDTO.getNumOfBedrooms());
         setNumOfBathrooms(stayDTO.getNumOfBathrooms());
-        setStayType(stayType.valueOf(stayDTO.getStayType()));
-        setPropertyType(propertyType.valueOf(stayDTO.getPropertyType()));
+        setStayTypeId(stayDTO.getStayTypeId());
+        setPropertyTypeId(stayDTO.getPropertyTypeId());
     }
 
 }

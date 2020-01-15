@@ -1,12 +1,19 @@
 package finalproject.airbnb.utilities;
 
+import finalproject.airbnb.exceptions.BadRequestException;
+import finalproject.airbnb.model.dao.StayDAO;
 import finalproject.airbnb.model.pojo.Location;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.sql.SQLException;
 
 @Component
 public class StayValidator {
+    @Autowired
+    StayDAO stayDAO;
 
-    private static final int MAX_STAY_PRICE = 100000;
+    public static final int MAX_STAY_PRICE = 100000;
     private static final int MAX_TITLE_LENGTH = 100;
     private static final int MAX_BEDROOMS = 50;
     private static final int MAX_BEDS = 50;
@@ -30,6 +37,19 @@ public class StayValidator {
 
     public boolean isValidNumOfBathrooms(int numOfBathrooms) {
         return numOfBathrooms >= 1 && numOfBathrooms <= MAX_BATHROOMS;
+    }
+
+    public boolean isValidStayType(long stayTypeId) throws SQLException {
+        if(stayDAO.getStayTypeById(stayTypeId)==null){
+            return false;
+        }
+        return true;
+    }
+    public boolean isValidPropertyType(long stayPropertyTypeId) throws SQLException {
+        if(stayDAO.getPropertyTypeById(stayPropertyTypeId)==null){
+            return false;
+        }
+        return true;
     }
 
 }

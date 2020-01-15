@@ -24,7 +24,7 @@ public class StayDTO {
     private int numOfBeds;
     private int numOfBedrooms;
     private int numOfBathrooms;
-    private String stayType;
-    private String propertyType;
+    private long stayTypeId;
+    private long propertyTypeId;
 
 }

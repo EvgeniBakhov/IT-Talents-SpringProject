@@ -16,8 +16,8 @@ public class StayFilterDTO {
     private int numOfBeds;
     private int numOfBedrooms;
     private int numOfBathrooms;
-    private String stayType;
-    private String propertyType;
+    private long stayTypeId;
+    private long propertyTypeId;
     private String order;
     private String city;
     private String country;
