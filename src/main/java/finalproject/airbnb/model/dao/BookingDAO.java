@@ -12,16 +12,23 @@ import java.util.List;
 
 @Component
 public class BookingDAO {
-    private static final String ADD_BOOKING_SQL = "INSERT INTO bookings (stay_id, user_id, from_date, to_date, accepted, valid) VALUES (?, ?, ?, ?, ?, ?);";
-    private static final String GET_BOOKING_BY_STAY_SQL = "SELECT id, stay_id, user_id, from_date, to_date, accepted, valid " +
-            "FROM bookings WHERE stay_id = ? ORDER BY from_date;";
-    private static final String GET_BOOKINGS_BETWEEN_DATES_SQL = "SELECT id, stay_id, user_id, from_date, to_date, accepted, valid FROM bookings " +
-            "WHERE stay_id = ? AND accepted = 1 AND (from_date BETWEEN ? AND ? OR to_date BETWEEN ? AND ?) OR to_date = ? OR to_date = ? OR from_date = ? OR from_date = ? OR (from_date> ? AND to_date< ?);";
-    private static final String GET_ALL_BOOKINGS_BY_USER_ID = "SELECT id, stay_id, user_id, from_date, to_date, accepted, valid FROM bookings WHERE user_id = ? ORDER BY from_date";
+    private static final String ADD_BOOKING_SQL = "INSERT INTO bookings (stay_id, user_id, from_date, to_date, " +
+            "accepted, valid) VALUES (?, ?, ?, ?, ?, ?);";
+    private static final String GET_BOOKING_BY_STAY_SQL = "SELECT id, stay_id, user_id, from_date, to_date, " +
+            "accepted, valid FROM bookings WHERE stay_id = ? ORDER BY from_date;";
+    private static final String GET_BOOKINGS_BETWEEN_DATES_SQL = "SELECT id, stay_id, user_id, from_date, to_date," +
+            " accepted, valid FROM bookings WHERE stay_id = ? AND accepted = 1 AND (from_date BETWEEN ? AND ? " +
+            "OR to_date BETWEEN ? AND ?) OR to_date = ? OR to_date = ? OR from_date = ? OR from_date = ? OR " +
+            "(from_date> ? AND to_date< ?);";
+    private static final String GET_ALL_BOOKINGS_BY_USER_ID = "SELECT id, stay_id, user_id, from_date, to_date, " +
+            "accepted, valid FROM bookings WHERE user_id = ? ORDER BY from_date";
     private static final String DELETE_BOOKING = "DELETE FROM bookings WHERE id = ?;";
-    public static final String GET_BOOKING_BY_ID = "SELECT id, stay_id, user_id, from_date, to_date, accepted, valid FROM bookings WHERE id = ?";
-    private static final String GET_UNACCEPTED_BOOKINGS_SQL = "SELECT id, stay_id, user_id, from_date, to_date, accepted, valid FROM bookings WHERE stay_id = ? AND accepted = 0 ORDER BY from_date;";
+    public static final String GET_BOOKING_BY_ID = "SELECT id, stay_id, user_id, from_date, to_date, accepted, " +
+            "valid FROM bookings WHERE id = ?";
+    private static final String GET_UNACCEPTED_BOOKINGS_SQL = "SELECT id, stay_id, user_id, from_date, to_date," +
+            " accepted, valid FROM bookings WHERE stay_id = ? AND accepted = 0 ORDER BY from_date;";
     public static final String ACCEPT_BOOKING_SQL = "UPDATE bookings SET accepted = 1 WHERE id = ?";
+    public static final String DELETE_BOOKING_SQL = "DELETE FROM bookings WHERE id = ?;";
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -161,5 +168,4 @@ public class BookingDAO {
         }
         return "Booking accepted.";
     }
-
 }

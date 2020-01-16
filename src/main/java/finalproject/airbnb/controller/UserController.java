@@ -187,7 +187,7 @@ public class UserController extends AbstractController{
         return "Photo added.";
     }
     @DeleteMapping
-    public String deletePicture(HttpSession session){
+    public String deletePicture(HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(SESSION_KEY_LOGGED_USER);
         if(user == null){
             throw new AuthorizationException();

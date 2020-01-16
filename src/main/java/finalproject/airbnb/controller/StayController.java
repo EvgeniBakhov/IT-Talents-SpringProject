@@ -67,6 +67,12 @@ public class StayController extends AbstractController {
             !stayValidator.isValidNumOfBedrooms(stay.getNumOfBedrooms())) {
             throw new BadRequestException("Number must be between 1 and 50!");
         }
+        if(!stayValidator.isValidStayType(stay.getStayTypeId())) {
+            throw new BadRequestException("Invalid stay type!");
+        }
+        if(!stayValidator.isValidPropertyType(stay.getPropertyTypeId())) {
+            throw new BadRequestException("Invalid property type!");
+        }
         long stayId = stayDAO.addStay(stay);
         return stayDAO.getStayById(stayId);
     }
@@ -139,11 +145,11 @@ public class StayController extends AbstractController {
         if(user == null){
             throw new AuthorizationException();
         }
-        if(user.getId()!=stayDAO.getHostId(id)){
+        if(user.getId() != stayDAO.getHostId(id)){
             throw new AuthorizationException("You have to be host to see stay's bookings.");
         }
         List<Booking> bookingsForStay = bookingDAO.getBookingByStayId(id);
-        if(bookingsForStay==null){
+        if(bookingsForStay == null){
             throw new NotFoundException("There are no bookings for this stay.");
         }
         return bookingsForStay;
@@ -154,17 +160,17 @@ public class StayController extends AbstractController {
         if(user == null){
             throw new AuthorizationException();
         }
-        if(user.getId()!=stayDAO.getHostId(id)){
+        if(user.getId() != stayDAO.getHostId(id)){
             throw new AuthorizationException("You have to be host to see stay's bookings.");
         }
         List<Booking> unacceptedBookings = bookingDAO.getUnacceptedBookingByStayId(id);
-        if(unacceptedBookings==null){
+        if(unacceptedBookings == null){
             throw new NotFoundException("There are no unaccepted bookings for this stay.");
         }
         return unacceptedBookings;
     }
 
-    @PutMapping("/bookings/{id}")
+    @PutMapping("/bookings/{id}/accept")
     public String acceptBooking(@PathVariable long id, HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
         if(user == null){
@@ -179,6 +185,7 @@ public class StayController extends AbstractController {
         }
         return bookingDAO.acceptBooking(booking);
     }
+
     @PostMapping("/stays/{id}/addImage")
     public String addImage(@PathVariable long id, @RequestParam ("file") MultipartFile file, HttpSession session) throws SQLException, IOException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);

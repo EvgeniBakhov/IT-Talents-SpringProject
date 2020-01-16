@@ -23,8 +23,8 @@ public class StayDAO {
     public static final String GET_STAY_TYPE_BY_ID = "SELECT type_name FROM stay_types WHERE id = ?";
     private static final String ADD_PICTURE_SQL = "INSERT INTO pictures (stay_id, picture_url) VALUES(?, ?);";
     private static final String GET_STAY_PICTURES_URL = "SELECT picture_url FROM pictures WHERE stay_id = ?";
-    private static final String ADD_STAY_SQL = "INSERT INTO stays (host_id, location_id, price, stay_description, title, stay_type_id, " +
-            "instant_book, property_type_id, rules, num_of_beds, num_of_bedrooms, num_of_bathrooms)" +
+    private static final String ADD_STAY_SQL = "INSERT INTO stays (host_id, location_id, price, stay_description, title, " +
+            "stay_type_id, instant_book, property_type_id, rules, num_of_beds, num_of_bedrooms, num_of_bathrooms)" +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_STAY_SQL = "DELETE FROM stays WHERE id = ?;";
     private static final String GET_STAY_BY_ID_SQL = "SELECT s.id, u.first_name, u.last_name, u.profile_picture," +
@@ -51,6 +51,9 @@ public class StayDAO {
             " JOIN stay_types AS st ON(s.stay_type_id = st.id) " +
             " JOIN property_types AS pr ON(s.property_type_id = pr.id)" +
             " WHERE s.host_id = ?";
+    public static final String EDIT_STAY_SQL = "UPDATE stays SET price = ?, stay_description = ?, title = ?, " +
+            "instant_book = ?, rules = ?, num_of_beds = ?, num_of_bedrooms = ?, num_of_bathrooms = ?, type_id = ?, " +
+            "property_type_id = ? WHERE id = ?;";
 
 
     @Autowired
@@ -104,7 +107,7 @@ public class StayDAO {
 
     public GetStayDTO getStayById(long id) throws SQLException {
         try(Connection connection = jdbcTemplate.getDataSource().getConnection();
-            PreparedStatement statement = connection.prepareStatement(GET_STAY_BY_ID_SQL, Statement.RETURN_GENERATED_KEYS)) {
+            PreparedStatement statement = connection.prepareStatement(GET_STAY_BY_ID_SQL)) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             if(result.next()) {
@@ -177,7 +180,7 @@ public class StayDAO {
 
     public StayDTO editStay(long id, StayDTO stayDTO) throws SQLException {
         Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try( PreparedStatement statement = connection.prepareStatement("UPDATE stays SET price = ?, stay_description = ?, title = ?, instant_book = ?, rules = ?, num_of_beds = ?, num_of_bedrooms = ?, num_of_bathrooms = ?, type_id = ?, property_type_id = ? WHERE id = ?;" )) {
+        try( PreparedStatement statement = connection.prepareStatement(EDIT_STAY_SQL)) {
             Location location = new Location(stayDTO.getStreetAddress(), stayDTO.getCity(), stayDTO.getCountry());
             location.setId(getStayById(id).getLocation().getId());
             connection.setAutoCommit(false);
@@ -239,7 +242,7 @@ public class StayDAO {
     public List<GetStayDTO> filterStays(StayFilterDTO stayFilterDTO) throws SQLException {
         List<Object> params = new ArrayList<>();
         String filterStaysSQL = "SELECT u.first_name, u.last_name, u.profile_picture, l.street_address, l.city, c.country_name, " +
-                " s.price, s.rating, s.stay_description, s.title," +
+                " s.id, s.price, s.rating, s.stay_description, s.title," +
                 " st.type_name, s.instant_book, pr.property_type_name," +
                 " s.rules, s.num_of_beds, s.num_of_bedrooms, s.num_of_bathrooms " +
                 " FROM stays AS s" +

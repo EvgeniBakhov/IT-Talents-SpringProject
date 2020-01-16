@@ -41,7 +41,6 @@ public class ReviewController extends AbstractController {
         review.setUser(new UserReviewDTO(user));
         review.setStayId(id);
         reviewDAO.addReview(review);
-        updateStayRating(review);
         return review;
     }
 
@@ -76,17 +75,6 @@ public class ReviewController extends AbstractController {
             throw new AuthorizationException("You don't have permissions to edit this review!");
         }
         return reviewDAO.editReview(id, reviewDTO);
-    }
-
-    private void updateStayRating(Review review) throws SQLException {
-        GetStayDTO stay = stayDAO.getStayById(review.getStayId());
-        double currentStayRating = stay.getRating();
-        int numberOfStayReviews = reviewDAO.getReviewsByStayId(stay.getId()).size();
-        double avgReviewRating = (double)(review.getCleanlinessRating() + review.getAccuracyRating() +
-                review.getCommunicationRating() + review.getCheckInRating() +
-                review.getLocationRating() + review.getValueRating()) / RATING_TYPES_COUNT;
-        double updatedRating = ((numberOfStayReviews * currentStayRating) + avgReviewRating ) / (numberOfStayReviews + 1);
-        stayDAO.updateRating(stay.getId(), updatedRating);
     }
 
 }

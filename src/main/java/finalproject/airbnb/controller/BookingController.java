@@ -60,7 +60,7 @@ public class BookingController extends AbstractController{
         if(booking == null) {
             throw new NotFoundException("Booking not found.");
         }
-        if(user.getId() != booking.getUserId()) {
+        if(user.getId() != booking.getUserId() || user.getId() != stayDAO.getHostId(booking.getStayId())) {
             throw new AuthorizationException("You have no permissions to delete this booking");
         }
         return bookingDAO.deleteBooking(id);

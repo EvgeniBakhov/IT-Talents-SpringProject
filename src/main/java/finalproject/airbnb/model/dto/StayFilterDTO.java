@@ -21,4 +21,5 @@ public class StayFilterDTO {
     private String order;
     private String city;
     private String country;
+
 }

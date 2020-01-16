@@ -15,10 +15,12 @@ import java.time.LocalDate;
 public class UserDAO {
 
     private static final String DELETE_USER_SQL = "DELETE FROM users WHERE id = ?;";
-    private static final String GET_USER_BY_ID_SQL = "SELECT u.*, l.street_address AS address, l.city AS city, c.country_name AS country " +
+    private static final String GET_USER_BY_ID_SQL = "SELECT u.*, l.street_address AS address, l.city AS city, " +
+            "c.country_name AS country " +
             "FROM users AS u JOIN locations AS l ON(u.user_location_id = l.id)" +
             "JOIN countries AS c ON (l.country_id = c.id) WHERE u.id = ?;";
-    private static final String GET_USER_BY_EMAIL_SQL = "SELECT u.*, l.street_address AS address, l.city AS city, c.country_name AS country " +
+    private static final String GET_USER_BY_EMAIL_SQL = "SELECT u.*, l.street_address AS address, l.city AS city, " +
+            "c.country_name AS country " +
             "FROM users AS u JOIN locations AS l ON(u.user_location_id = l.id)" +
             "JOIN countries AS c ON (l.country_id = c.id) WHERE u.email = ?;";
     private static final String EDIT_USER_SQL = "UPDATE users SET first_name = ?, last_name = ?, " +
@@ -124,8 +126,9 @@ public class UserDAO {
     }
 
     public UserWithoutPassDTO editUser(User user) throws SQLException {
-        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
-             PreparedStatement statement = connection.prepareStatement(EDIT_USER_SQL)) {
+        Connection connection = jdbcTemplate.getDataSource().getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(EDIT_USER_SQL)) {
+            connection.setAutoCommit(false);
             statement.setString(1, user.getFirstName());
             statement.setString(2, user.getLastName());
             statement.setString(3, user.getEmail());
@@ -137,7 +140,15 @@ public class UserDAO {
             statement.setLong(9, user.getId());
             statement.executeUpdate();
             locationDAO.editLocation(user.getLocation());
+            connection.commit();
             return new UserWithoutPassDTO(getUserById(user.getId()));
+        }  catch (SQLException e) {
+            connection.rollback();
+            throw e;
+        }
+        finally {
+            connection.setAutoCommit(true);
+            connection.close();
         }
     }
 

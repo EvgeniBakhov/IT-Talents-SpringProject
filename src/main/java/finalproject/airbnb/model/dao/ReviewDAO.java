@@ -1,5 +1,6 @@
 package finalproject.airbnb.model.dao;
 
+import finalproject.airbnb.model.dto.GetStayDTO;
 import finalproject.airbnb.model.dto.ReviewDTO;
 import finalproject.airbnb.model.dto.UserReviewDTO;
 import finalproject.airbnb.model.pojo.Review;
@@ -39,6 +40,8 @@ public class ReviewDAO {
     private static final String GET_REVIEWS_BY_USER_ID_SQL = "SELECT id, user_id, stay_id, comment_text, cleanliness_rating, " +
             "check_in_rating, accuracy_rating, communication_rating, value_rating, location_rating FROM reviews WHERE user_id = ?";
 
+    public static final int RATING_TYPES_COUNT = 6;
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
@@ -63,6 +66,7 @@ public class ReviewDAO {
             ResultSet result = statement.getGeneratedKeys();
             result.next();
             review.setId(result.getLong(1));
+            updateStayRating(review);
             connection.commit();
             return review;
         } catch (SQLException e) {
@@ -186,6 +190,17 @@ public class ReviewDAO {
             statement.executeUpdate();
             return reviewDTO;
         }
+    }
+
+    private void updateStayRating(Review review) throws SQLException {
+        GetStayDTO stay = stayDAO.getStayById(review.getStayId());
+        double currentStayRating = stay.getRating();
+        int numberOfStayReviews = getReviewsByStayId(stay.getId()).size();
+        double avgReviewRating = (double)(review.getCleanlinessRating() + review.getAccuracyRating() +
+                review.getCommunicationRating() + review.getCheckInRating() +
+                review.getLocationRating() + review.getValueRating()) / RATING_TYPES_COUNT;
+        double updatedRating = ((numberOfStayReviews * currentStayRating) + avgReviewRating ) / (numberOfStayReviews + 1);
+        stayDAO.updateRating(stay.getId(), updatedRating);
     }
 
 }

@@ -9,8 +9,8 @@ import java.time.Period;
 @Component
 public class UserValidator {
 
-    private static final String EMAIL_REGEX = "^[A-z0-9-_.]+@[A-z0-9]+\\.[A-z]{2,6}$";
-    private static final String NAME_REGEX = "^[A-z']{2,30}$";
+    private static final String EMAIL_REGEX = "^[a-zA-Z0-9-_.]+@[A-z0-9]+\\.[A-z]{2,6}$";
+    private static final String NAME_REGEX = "^[a-zA-Z']{2,30}$";
     private static final String PHONE_NUMBER_REGEX = "^\\+[0-9]{11,15}$";
     private static final int MIN_AGE = 18;
     private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$";
