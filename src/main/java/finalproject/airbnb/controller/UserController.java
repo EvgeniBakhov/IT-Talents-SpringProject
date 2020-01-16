@@ -13,6 +13,7 @@ import finalproject.airbnb.model.pojo.Booking;
 import finalproject.airbnb.model.pojo.User;
 import finalproject.airbnb.model.dao.UserDAO;
 import finalproject.airbnb.utilities.LocationValidator;
+import finalproject.airbnb.utilities.PictureValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
@@ -38,13 +39,15 @@ public class UserController extends AbstractController{
     @Autowired
     private UserDAO userDAO;
     @Autowired
-    private UserValidator userValidator;
-    @Autowired
     private BookingDAO bookingDAO;
+    @Autowired
+    private ReviewDAO reviewDAO;
+    @Autowired
+    private UserValidator userValidator;
     @Autowired
     private LocationValidator locationValidator;
     @Autowired
-    private ReviewDAO reviewDAO;
+    private PictureValidator pictureValidator;
 
     @PostMapping("/register")
     public UserWithoutPassDTO registerUser(@RequestBody RegisterUserDTO registerUserDTO, HttpSession session) throws SQLException {
@@ -183,7 +186,7 @@ public class UserController extends AbstractController{
             throw new AuthorizationException("You have no permissions to see bookings of this user.");
         }
         List<Booking> allBookings = bookingDAO.getAllBookingsByUserId(id);
-        if(allBookings == null){
+        if(allBookings.isEmpty()){
             throw new NotFoundException("You haven't any bookings yet.");
         }
         return allBookings;
@@ -198,6 +201,9 @@ public class UserController extends AbstractController{
             throw new BadRequestException("Cannot upload the file.");
         }
         String fileName = LocalDateTime.now().toString() + "_" + user.getId() + "_" + file.getOriginalFilename();
+        if(!pictureValidator.isValidPicture(fileName)) {
+            throw new BadRequestException("File is not a picture. Available formats are jpg/gif/png/bmp.");
+        }
         fileName = fileName.replace(':', '-');
         File localFile  = new File (USER_UPLOAD_FOLDER + fileName);
         Files.copy(file.getInputStream(), localFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -211,8 +217,8 @@ public class UserController extends AbstractController{
             throw new AuthorizationException();
         }
         File file = new File(USER_UPLOAD_FOLDER+user.getProfilePicture());
-        file.delete();
+        boolean isDeleted = file.delete();
         userDAO.deletePicture(user.getId());
-        return  "Profile picture deleted.";
+        return  "Profile picture deleted: " + isDeleted;
     }
 }

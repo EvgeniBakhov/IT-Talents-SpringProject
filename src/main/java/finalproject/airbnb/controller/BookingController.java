@@ -44,7 +44,7 @@ public class BookingController extends AbstractController{
         if(!bookingValidator.validateBooking(booking)){
             throw new BadRequestException("Start date must be before the end date.");
         }
-        if(bookingDAO.getBookingsBetweenDates(id, booking.getFromDate(), booking.getToDate())){
+        if(!bookingDAO.getBookingsBetweenDates(id, booking.getFromDate(), booking.getToDate()).isEmpty()){
             throw new BadRequestException("Sorry, stay is already booked for this date.");
         }
         if(getStayDTO.isInstantBook()){
@@ -63,10 +63,26 @@ public class BookingController extends AbstractController{
         if(booking == null) {
             throw new NotFoundException("Booking not found.");
         }
-        if(user.getId() != booking.getUserId() || user.getId() != stayDAO.getHostId(booking.getStayId())) {
+        if(user.getId() != booking.getUserId() && user.getId() != stayDAO.getHostId(booking.getStayId())) {
             throw new AuthorizationException("You have no permissions to delete this booking");
         }
         return bookingDAO.deleteBooking(id);
+    }
+
+    @PutMapping("/bookings/{id}/accept")
+    public String acceptBooking(@PathVariable long id, HttpSession session) throws SQLException {
+        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
+        if(user == null){
+            throw new AuthorizationException();
+        }
+        Booking booking = bookingDAO.getBookingById(id);
+        if(booking == null) {
+            throw new BadRequestException("Booking doesn't exist");
+        }
+        if(user.getId() != stayDAO.getHostId(booking.getStayId())){
+            throw new AuthorizationException("You have to be host to accept stay's bookings.");
+        }
+        return bookingDAO.acceptBooking(booking);
     }
 
 }

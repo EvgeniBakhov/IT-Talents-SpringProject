@@ -53,6 +53,7 @@ public class ReviewDAO {
         Connection connection = jdbcTemplate.getDataSource().getConnection();
         try ( PreparedStatement statement = connection.prepareStatement(ADD_REVIEW_SQL, Statement.RETURN_GENERATED_KEYS)) {
             connection.setAutoCommit(false);
+            updateStayRating(review);
             statement.setLong(1, review.getUser().getId());
             statement.setLong(2, review.getStayId());
             statement.setString(3, review.getComment());
@@ -66,7 +67,6 @@ public class ReviewDAO {
             ResultSet result = statement.getGeneratedKeys();
             result.next();
             review.setId(result.getLong(1));
-            updateStayRating(review);
             connection.commit();
             return review;
         } catch (SQLException e) {

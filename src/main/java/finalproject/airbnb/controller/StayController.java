@@ -12,6 +12,7 @@ import finalproject.airbnb.model.dto.StayDTO;
 import finalproject.airbnb.model.dto.StayFilterDTO;
 import finalproject.airbnb.model.pojo.*;
 import finalproject.airbnb.utilities.LocationValidator;
+import finalproject.airbnb.utilities.PictureValidator;
 import finalproject.airbnb.utilities.StayValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -29,18 +30,20 @@ import java.util.List;
 @RestController
 public class StayController extends AbstractController {
 
-    public static final String UPLOAD_FOLDER = "C:\\Users\\virgi\\IdeaProjects\\IT-Talents-SpringProject\\src\\main\\resources\\StayPictures";
+    public static final String UPLOAD_FOLDER = "C:\\Users\\virgi\\IdeaProjects\\IT-Talents-SpringProject\\src\\main\\resources\\StayPictures\\";
 
     @Autowired
     private StayDAO stayDAO;
     @Autowired
-    private StayValidator stayValidator;
-    @Autowired
     private BookingDAO bookingDAO;
     @Autowired
-    private LocationValidator locationValidator;
-    @Autowired
     private ReviewDAO reviewDAO;
+    @Autowired
+    private PictureValidator pictureValidator;
+    @Autowired
+    private StayValidator stayValidator;
+    @Autowired
+    private LocationValidator locationValidator;
 
     @PostMapping("/stays")
     public GetStayDTO addStay(@RequestBody StayDTO stayDTO, HttpSession session) throws SQLException {
@@ -89,6 +92,9 @@ public class StayController extends AbstractController {
         if(user == null){
             throw new AuthorizationException();
         }
+        if(stayDAO.getStayById(id) == null) {
+            throw new NotFoundException("Stay not found");
+        }
         if(user.getId() != stayDAO.getHostId(id)){
             throw new AuthorizationException("You must be a host to edit this stay.");
         }
@@ -106,6 +112,12 @@ public class StayController extends AbstractController {
                 !stayValidator.isValidNumOfBeds(stayDTO.getNumOfBeds()) ||
                 !stayValidator.isValidNumOfBedrooms(stayDTO.getNumOfBedrooms())) {
             throw new BadRequestException("Number must be between 1 and 50!");
+        }
+        if(!stayValidator.isValidStayType(stayDTO.getStayTypeId())) {
+            throw new BadRequestException("Invalid stay type!");
+        }
+        if(!stayValidator.isValidPropertyType(stayDTO.getPropertyTypeId())) {
+            throw new BadRequestException("Invalid property type!");
         }
         return stayDAO.editStay(id, stayDTO);
     }
@@ -137,13 +149,8 @@ public class StayController extends AbstractController {
     }
 
     @GetMapping("/stays/{id}/reviews")
-    public List<Review> getReviewsForStay(@PathVariable long id, HttpSession session) throws SQLException {
-        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
-        if(user == null) {
-            throw new AuthorizationException();
-        }
-        List<Review> reviews = reviewDAO.getReviewsByStayId(id);
-        return reviews;
+    public List<Review> getReviewsForStay(@PathVariable long id) throws SQLException {
+        return reviewDAO.getReviewsByStayId(id);
     }
     @GetMapping("/stays/{id}/bookings")
     public List<Booking> getAllBookingsForStay(@PathVariable long id, HttpSession session) throws SQLException {
@@ -166,6 +173,9 @@ public class StayController extends AbstractController {
         if(user == null){
             throw new AuthorizationException();
         }
+        if(stayDAO.getStayById(id) == null) {
+            throw new BadRequestException("Stay does not exist.");
+        }
         if(user.getId() != stayDAO.getHostId(id)){
             throw new AuthorizationException("You have to be host to see stay's bookings.");
         }
@@ -176,26 +186,14 @@ public class StayController extends AbstractController {
         return unacceptedBookings;
     }
 
-    @PutMapping("/bookings/{id}/accept")
-    public String acceptBooking(@PathVariable long id, HttpSession session) throws SQLException {
-        User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
-        if(user == null){
-            throw new AuthorizationException();
-        }
-        Booking booking = bookingDAO.getBookingById(id);
-        if(booking == null) {
-            throw new BadRequestException("Booking doesn't exist");
-        }
-        if(user.getId() != stayDAO.getHostId(booking.getStayId())){
-            throw new AuthorizationException("You have to be host to accept stay's bookings.");
-        }
-        return bookingDAO.acceptBooking(booking);
-    }
     @PostMapping("/stays/{id}/addPicture")
     public String addImage(@PathVariable long id, @RequestParam ("file") MultipartFile file, HttpSession session) throws SQLException, IOException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
         if(user == null){
             throw new AuthorizationException();
+        }
+        if(stayDAO.getStayById(id) == null){
+            throw new NotFoundException("Stay not found.");
         }
         if(stayDAO.getHostId(id) != user.getId()){
             throw new AuthorizationException("You must be a host to add the image to this stay.");
@@ -204,8 +202,11 @@ public class StayController extends AbstractController {
             throw new BadRequestException("Cannot upload this file");
         }
         String fileName = LocalDateTime.now().toString() + "_" + user.getId() + "_" + file.getOriginalFilename();
+        if(!pictureValidator.isValidPicture(fileName)) {
+            throw new BadRequestException("File is not a picture. Available formats are jpg/gif/png/bmp.");
+        }
         fileName = fileName.replace(':', '-');
-        File localFile  = new File (UPLOAD_FOLDER + file.getOriginalFilename());
+        File localFile  = new File (UPLOAD_FOLDER + fileName);
         Files.copy(file.getInputStream(), localFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         stayDAO.addImage(fileName, id);
         return "Photo added.";

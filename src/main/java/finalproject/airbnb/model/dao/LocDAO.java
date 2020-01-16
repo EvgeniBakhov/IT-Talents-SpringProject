@@ -16,6 +16,7 @@ public class LocDAO {
             "c.country_name AS country FROM locations AS l JOIN countries AS c ON (l.country_id = c.id) WHERE l.id = ?;";
     public static final String EDIT_LOCATION_SQL = "UPDATE locations SET street_address = ?, city = ?, country_id = ?" +
             " WHERE id = ?";
+    public static final String DELETE_LOCATION_SQL = "DELETE FROM locations WHERE id = ?;";
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -62,10 +63,12 @@ public class LocDAO {
 
     private long addCountry(String country) throws SQLException {
         try (Connection connection = jdbcTemplate.getDataSource().getConnection();
-             PreparedStatement statement = connection.prepareStatement(ADD_COUNTRY_SQL)) {
+             PreparedStatement statement = connection.prepareStatement(ADD_COUNTRY_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, country);
             statement.executeUpdate();
-            return getCountryId(country);
+            ResultSet result = statement.getGeneratedKeys();
+            result.next();
+            return result.getLong(1);
         }
     }
 
@@ -105,6 +108,14 @@ public class LocDAO {
         finally {
             connection.setAutoCommit(true);
             connection.close();
+        }
+    }
+
+    public void deleteLocation(long id) throws SQLException {
+        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
+            PreparedStatement statement = connection.prepareStatement(DELETE_LOCATION_SQL)) {
+            statement.setLong(1, id);
+            statement.executeUpdate();
         }
     }
 }

@@ -12,7 +12,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Location {
 
-    @JsonIgnore
     private long id;
     private String address;
     private String city;
