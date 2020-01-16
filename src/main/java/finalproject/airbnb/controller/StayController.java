@@ -127,9 +127,6 @@ public class StayController extends AbstractController {
             throw new AuthorizationException();
         }
         List<GetStayDTO> stays = stayDAO.getStaysByUserId(id);
-        if(stays.isEmpty()) {
-            throw new NotFoundException("Stays not found");
-        }
         return stays;
     }
 
@@ -140,9 +137,6 @@ public class StayController extends AbstractController {
             throw new AuthorizationException();
         }
         List<Review> reviews = reviewDAO.getReviewsByStayId(id);
-        if(reviews.isEmpty()) {
-            throw new NotFoundException("No reviews for stay");
-        }
         return reviews;
     }
     @GetMapping("/stays/{id}/bookings")
@@ -191,7 +185,7 @@ public class StayController extends AbstractController {
         }
         return bookingDAO.acceptBooking(booking);
     }
-    @PostMapping("/stays/{id}/addImage")
+    @PostMapping("/stays/{id}/addPicture")
     public String addImage(@PathVariable long id, @RequestParam ("file") MultipartFile file, HttpSession session) throws SQLException, IOException {
         User user = (User) session.getAttribute(UserController.SESSION_KEY_LOGGED_USER);
         if(user == null){
@@ -264,4 +258,8 @@ public class StayController extends AbstractController {
         return stayDAO.filterStays(stayFilterDTO);
     }
 
+    @GetMapping("/topStays")
+    public List<GetStayDTO> getTopStays() throws SQLException {
+        return stayDAO.getTopRatedStays();
+    }
 }

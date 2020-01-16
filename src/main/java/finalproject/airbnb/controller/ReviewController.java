@@ -31,8 +31,12 @@ public class ReviewController extends AbstractController {
         if(user == null) {
             throw new AuthorizationException();
         }
-        if(stayDAO.getStayById(id) == null) {
+        GetStayDTO stay = stayDAO.getStayById(id);
+        if(stay == null) {
             throw new NotFoundException("Stay not found");
+        }
+        if(user.getId() == stayDAO.getHostId(id)){
+            throw new AuthorizationException("You can't make a review to your own stay.");
         }
         if(reviewDAO.getReviewByStayIdAndUser(id,user) != null) {
             throw new BadRequestException("You have already added a review");

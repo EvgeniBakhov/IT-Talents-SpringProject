@@ -204,7 +204,7 @@ public class UserController extends AbstractController{
         userDAO.addPicture(fileName, user.getId());
         return "Photo added.";
     }
-    @DeleteMapping
+    @DeleteMapping("/deletePicture")
     public String deletePicture(HttpSession session) throws SQLException {
         User user = (User) session.getAttribute(SESSION_KEY_LOGGED_USER);
         if(user == null){

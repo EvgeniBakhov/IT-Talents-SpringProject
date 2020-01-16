@@ -54,6 +54,18 @@ public class StayDAO {
             " WHERE s.host_id = ?";
     private static final String DELETE_PICTURE_SQL = "DELETE FROM pictures WHERE id = ?";
     private static final String GET_PICTURE_BY_ID = "SELECT id, stay_id, picture_url FROM pictures WHERE id = ?";
+    private static final String TOP_RATED_STAYS_SQL = "SELECT s.id, u.first_name, u.last_name, u.profile_picture," +
+            " l.street_address, l.city, c.country_name," +
+            " s.price, s.rating, s.stay_description, s.title," +
+            " st.type_name, s.instant_book, pr.property_type_name," +
+            " s.rules, s.num_of_beds, s.num_of_bedrooms, s.num_of_bathrooms " +
+            " FROM stays AS s" +
+            " JOIN users AS u ON (s.host_id = u.id)" +
+            " JOIN locations AS l ON (s.location_id = l.id)" +
+            " JOIN countries AS c ON (l.country_id = c.id)" +
+            " JOIN stay_types AS st ON(s.stay_type_id = st.id) " +
+            " JOIN property_types AS pr ON(s.property_type_id = pr.id)" +
+            "ORDER BY s.rating DESC LIMIT 5;";
 
 
     @Autowired
@@ -65,7 +77,7 @@ public class StayDAO {
 
     public long addStay(Stay stay) throws SQLException {
         Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try(PreparedStatement statement = connection.prepareStatement(ADD_STAY_SQL, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement statement = connection.prepareStatement(ADD_STAY_SQL, Statement.RETURN_GENERATED_KEYS)) {
             connection.setAutoCommit(false);
             long locID = locDAO.addLocation(stay.getLocation());
             statement.setLong(1, stay.getHost().getId());
@@ -89,8 +101,7 @@ public class StayDAO {
         } catch (SQLException e) {
             connection.rollback();
             throw e;
-        }
-        finally {
+        } finally {
             connection.setAutoCommit(true);
             connection.close();
         }
@@ -106,11 +117,11 @@ public class StayDAO {
     }
 
     public GetStayDTO getStayById(long id) throws SQLException {
-        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
-            PreparedStatement statement = connection.prepareStatement(GET_STAY_BY_ID_SQL, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_STAY_BY_ID_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
-            if(result.next()) {
+            if (result.next()) {
                 return new GetStayDTO(
                         id,
                         result.getString("u.first_name"),
@@ -131,12 +142,12 @@ public class StayDAO {
                         result.getInt("s.num_of_bedrooms"),
                         result.getInt("s.num_of_bathrooms")
                 );
-            }
-            else {
+            } else {
                 return null;
             }
         }
     }
+
     public List<GetStayDTO> getStaysByUserId(long id) throws SQLException {
         try (Connection connection = jdbcTemplate.getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_STAYS_BY_USER_ID)) {
@@ -180,7 +191,7 @@ public class StayDAO {
 
     public StayDTO editStay(long id, StayDTO stayDTO) throws SQLException {
         Connection connection = jdbcTemplate.getDataSource().getConnection();
-        try( PreparedStatement statement = connection.prepareStatement("UPDATE stays SET price = ?, stay_description = ?, title = ?, instant_book = ?, rules = ?, num_of_beds = ?, num_of_bedrooms = ?, num_of_bathrooms = ?, type_id = ?, property_type_id = ? WHERE id = ?;" )) {
+        try (PreparedStatement statement = connection.prepareStatement("UPDATE stays SET price = ?, stay_description = ?, title = ?, instant_book = ?, rules = ?, num_of_beds = ?, num_of_bedrooms = ?, num_of_bathrooms = ?, type_id = ?, property_type_id = ? WHERE id = ?;")) {
             Location location = new Location(stayDTO.getStreetAddress(), stayDTO.getCity(), stayDTO.getCountry());
             location.setId(getStayById(id).getLocation().getId());
             connection.setAutoCommit(false);
@@ -199,19 +210,18 @@ public class StayDAO {
             statement.executeUpdate();
             connection.commit();
             return stayDTO;
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             connection.rollback();
             throw e;
-        }
-        finally {
+        } finally {
             connection.setAutoCommit(true);
             connection.close();
         }
     }
+
     public Stay.stayType getStayTypeById(long id) throws SQLException {
-        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
-            PreparedStatement statement = connection.prepareStatement(GET_STAY_TYPE_BY_ID)){
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_STAY_TYPE_BY_ID)) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             result.next();
@@ -220,8 +230,8 @@ public class StayDAO {
     }
 
     public Stay.propertyType getPropertyTypeById(long id) throws SQLException {
-        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
-            PreparedStatement statement = connection.prepareStatement(GET_PROPERTY_TYPE_BY_ID)){
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_PROPERTY_TYPE_BY_ID)) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             result.next();
@@ -255,17 +265,17 @@ public class StayDAO {
         try (Connection connection = jdbcTemplate.getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(filterStaysSQL)) {
             for (int i = 0; i < params.size(); i++) {
-                if(params.get(i) instanceof Integer){
-                    statement.setInt(i+1, (Integer) params.get(i));
+                if (params.get(i) instanceof Integer) {
+                    statement.setInt(i + 1, (Integer) params.get(i));
                 }
                 if (params.get(i) instanceof Double) {
-                    statement.setDouble(i+1, (Double) params.get(i));
+                    statement.setDouble(i + 1, (Double) params.get(i));
                 }
                 if (params.get(i) instanceof String) {
-                    statement.setString(i+1, (String) params.get(i));
+                    statement.setString(i + 1, (String) params.get(i));
                 }
                 if (params.get(i) instanceof Long) {
-                    statement.setLong(i+1, (Long) params.get(i));
+                    statement.setLong(i + 1, (Long) params.get(i));
                 }
             }
             ResultSet result = statement.executeQuery();
@@ -307,38 +317,38 @@ public class StayDAO {
         String order = stayFilterDTO.getOrder();
         String city = stayFilterDTO.getCity();
         String country = stayFilterDTO.getCountry();
-        if(country != null){
-            if(!country.isEmpty()) {
+        if (country != null) {
+            if (!country.isEmpty()) {
                 sql.append(" c.country_name = ? AND ");
                 params.add(country);
             }
         }
-        if(city != null){
-            if(!city.isEmpty()){
+        if (city != null) {
+            if (!city.isEmpty()) {
                 sql.append(" l.city = ? AND ");
                 params.add(city);
             }
         }
-        if(numOfBathrooms != 0) {
+        if (numOfBathrooms != 0) {
             sql.append(" s.num_of_bathrooms = ? AND ");
             params.add(numOfBathrooms);
         }
-        if(numOfBedrooms != 0) {
+        if (numOfBedrooms != 0) {
             sql.append(" s.num_of_bedrooms = ? AND ");
             params.add(numOfBedrooms);
         }
-        if(numOfBeds != 0) {
+        if (numOfBeds != 0) {
             sql.append(" s.num_of_beds = ? AND ");
             params.add(numOfBeds);
         }
-        if(stayTypeId != 0) {
+        if (stayTypeId != 0) {
             sql.append(" s.stay_type_id = ? AND ");
             params.add(stayTypeId);
         }
-        if(propertyTypeId != 0) {
+        if (propertyTypeId != 0) {
             sql.append(" s.property_type_id = ? AND ");
         }
-        if(minPrice != 0 && maxPrice != 0) {
+        if (minPrice != 0 && maxPrice != 0) {
             sql.append(" (s.price BETWEEN ? AND ?) ");
             params.add(minPrice);
             params.add(maxPrice);
@@ -347,11 +357,11 @@ public class StayDAO {
             params.add(0);
             params.add(StayValidator.MAX_STAY_PRICE);
         }
-        if(order != null) {
-            if(order.equalsIgnoreCase("ascending")) {
+        if (order != null) {
+            if (order.equalsIgnoreCase("ascending")) {
                 sql.append(" ORDER BY price ASC");
             }
-            if(order.equalsIgnoreCase("descending")) {
+            if (order.equalsIgnoreCase("descending")) {
                 sql.append(" ORDER BY price DESC");
             }
         }
@@ -359,22 +369,25 @@ public class StayDAO {
     }
 
 
-    public String addImage(String path, long id) throws SQLException {
-        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
-            PreparedStatement statement = connection.prepareStatement(ADD_PICTURE_SQL)){
+    public long addImage(String path, long id) throws SQLException {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(ADD_PICTURE_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, id);
             statement.setString(2, path);
             statement.executeUpdate();
+            ResultSet result = statement.getGeneratedKeys();
+            result.next();
+            return result.getLong(1);
         }
-        return path;
     }
+
     public List<String> getStayImages(long stayId) throws SQLException {
         List<String> imagePaths = new ArrayList<>();
-        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
-            PreparedStatement statement = connection.prepareStatement(GET_STAY_PICTURES_URL)){
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_STAY_PICTURES_URL)) {
             statement.setLong(1, stayId);
             ResultSet result = statement.executeQuery();
-            while(result.next()){
+            while (result.next()) {
                 imagePaths.add(result.getString("picture_url"));
             }
         }
@@ -383,8 +396,8 @@ public class StayDAO {
 
     public Picture getPictureById(long picId) throws SQLException {
         ResultSet result;
-        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
-            PreparedStatement statement = connection.prepareStatement(GET_PICTURE_BY_ID)){
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_PICTURE_BY_ID)) {
             statement.setLong(1, picId);
             result = statement.executeQuery();
             result.next();
@@ -395,10 +408,40 @@ public class StayDAO {
     }
 
     public void deletePicture(long picId) throws SQLException {
-        try(Connection connection = jdbcTemplate.getDataSource().getConnection();
-            PreparedStatement statement = connection.prepareStatement(DELETE_PICTURE_SQL)){
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE_PICTURE_SQL)) {
             statement.setLong(1, picId);
             statement.executeUpdate();
+        }
+    }
+
+    public List<GetStayDTO> getTopRatedStays() throws SQLException {
+        try (Connection connection = jdbcTemplate.getDataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement(TOP_RATED_STAYS_SQL)) {
+            List<GetStayDTO> topStays = new ArrayList<>();
+            ResultSet result = statement.executeQuery();
+            while(result.next()){
+                GetStayDTO getStayDTO = new GetStayDTO(result.getLong("s.id"),
+                        result.getString("u.first_name"),
+                        result.getString("u.last_name"),
+                        result.getString("u.profile_picture"),
+                        new Location(result.getString("l.street_address"),
+                                result.getString("l.city"),
+                                result.getString("c.country_name")),
+                        result.getDouble("s.price"),
+                        result.getDouble("s.rating"),
+                        result.getString("s.stay_description"),
+                        result.getString("s.title"),
+                        result.getString("st.type_name"),
+                        result.getBoolean("s.instant_book"),
+                        result.getString("pr.property_type_name"),
+                        result.getString("s.rules"),
+                        result.getInt("s.num_of_beds"),
+                        result.getInt("s.num_of_bedrooms"),
+                        result.getInt("s.num_of_bathrooms"));
+                topStays.add(getStayDTO);
+            }
+            return topStays;
         }
     }
 }
