@@ -20,7 +20,7 @@ public class StayValidator {
     private static final int MAX_BATHROOMS = 50;
 
     public boolean isValidPrice(double price) {
-        return price >= 0 && price < MAX_STAY_PRICE;
+        return price > 0 && price < MAX_STAY_PRICE;
     }
 
     public boolean isValidTitle(String title) {

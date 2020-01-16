@@ -130,6 +130,7 @@ public class UserController extends AbstractController{
             throw new NotFoundException("There is no user with this id");
         }
         userDAO.deleteUser(user);
+        session.invalidate();
         return "User has been deleted";
     }
 
@@ -217,8 +218,8 @@ public class UserController extends AbstractController{
             throw new AuthorizationException();
         }
         File file = new File(USER_UPLOAD_FOLDER+user.getProfilePicture());
-        boolean isDeleted = file.delete();
+        file.delete();
         userDAO.deletePicture(user.getId());
-        return  "Profile picture deleted: " + isDeleted;
+        return  "Profile picture deleted: ";
     }
 }
