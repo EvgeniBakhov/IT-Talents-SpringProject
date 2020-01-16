@@ -37,6 +37,9 @@ public class BookingController extends AbstractController{
         if(getStayDTO == null){
             throw new NotFoundException("Not found stay with this id");
         }
+        if(user.getId() == stayDAO.getHostId(id)){
+            throw new AuthorizationException("You can't book your own stay.");
+        }
         Booking booking = new Booking(bookingDTO, user.getId(), id);
         if(!bookingValidator.validateBooking(booking)){
             throw new BadRequestException("Start date must be before the end date.");
